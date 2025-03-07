@@ -1,0 +1,117 @@
+{% from "lib.j2" import format_input %}
+# Prompt for mathlib translator
+
+Suppose you are an expert mathematician and an expert in Lean and Mathlib.
+
+1. Your task is to first translate the formal instance provided below into an informal statement that is more accessible to mathematicians written in Latex. There are five parts of information attached to the instance.
+
+   * Head statements, including important statements, theorems, definitions of the mathmatical field the theorem in.
+   * Docstrings. In most cases, the docstrings contains the informal explanation of the formal statement, written by human. In this case, you should make good use of the doctrings and include all mathematical information in the docstrings in your translation of statement. Sometimes the docstring also contains implimentation notes, which should not appear in your translation.
+   * Neighbor statements that are next to the given statement.
+   * Dependent definitions or statements used in the instance.
+   * Similar translation exemplary statements. They are written by human and attached information of the exemplary statements and of high quality. You should learn their way of using the information and follow their style of informalization.
+
+   Utilize these information to better understand the formal instance. Make sure you follow the principles of informal statement when you translate the formal instance into informal statement.
+
+2. Then create an informal name. Use the provided formal name of the statement according to the naming conventions. Utilize the informal statement written in the first task. Make sure you follow the principles of informal name when you create an informal names. Principles of informal statement should also be conformed as possible as you can.
+
+## Ideas behind instances
+
+The main idea behind instances and typeclasses is to make arguments such as `Add α` implicit, and to use a database of user-defined instances to synthesize the desired instances automatically through a process known as typeclass resolution. Instances can be used to overload notation sych as `Mul α`, or store the canonical structures on a given type such as `Ring R`.
+If that were the extent of type class inference, it would not be all that impressive; it would be simply a mechanism of storing a list of instances for the elaborator to find in a lookup table. What makes type class inference powerful is that one can chain instances. That is, an instance declaration can in turn depend on an implicit instance of a type class. This causes class inference to chain through instances recursively, backtracking when necessary, in a Prolog-like search.
+
+
+## Principles of informal statement
+
+1. The informal statement should be written in human-used mathematical notations and formulas in latex as much as possible, explain the meaning of the symbols therein. Explain more detailed mathemathtical setup only if the definition appeared in the statement is not commonly accepted. Both of inputs and values of the definition should be expressed using mathematical formulas as much as possible.
+  Example:
+  DO NOT use "`Real.log`";
+  Use "$\log$" instead.
+2. DO NOT add any additional information that does not appear in the formal statement. The only exception is the explaination of an unfamiliar definition in the statement.
+  Example:
+  DO NOT translate `cos Real.pi = -1` as "$\cos \pi = -1$. This follows from ...", the whole part "This follows from ..." should be deleted since it does not appear in the statement.
+  Leave only the part "$\cos \pi = -1$".
+
+## Principles of informal name
+
+1. Emphasize the core concepts in the theorem. The definition name should not merely list concepts; Use words that indicate logical relationships and clearly state the conclusion.
+  Example:
+  Use "A equals to B" or "A implies B" (or simply "$A = B$" and "$A \to B$"), instead of "theorem of A and B" when the theorem states the result of `A = B` or `A → B`.
+2. Be as concise as possible on this basis. Use latex mathematical formulas in the informal name if possible.
+  Example:
+  "$\pi > 3$" is concise name for `theorem Real.pi_gt_three`.
+
+**Warning: The following example is only used to demonstrate the format, their exact meaning is irrelevant.**
+
+**Head statements:**
+# Lemmas about division (semi)rings and (semi)fields
+
+**Kind:**
+instance
+**Docstring:**
+
+**Dependent statements:**
+1.
+Formal name: DivisionSemiring.toSemiring
+Formal statement: {α : Type u_4} → [self : DivisionSemiring α] → Semiring α
+Informal name: Semiring Structure Inheritance from Division Semiring
+Informal statement: For any type \( \alpha \) that is a division semiring, there exists a corresponding semiring structure on \( \alpha \). This instance asserts that a division semiring, which is a semiring with multiplicative inverses for nonzero elements, inherently possesses all the properties of a semiring, including operations for addition and multiplication, and elements 0 and 1 with their respective identities.
+2.
+Formal name: IsDomain
+Formal statement: (α : Type u) → [inst : Semiring α] → Prop
+Informal name: Domain property
+Informal statement: A domain is a nontrivial semiring with the property that multiplication by a non-zero element is cancellative on both sides. In other words, for a semiring α, it satisfies the following conditions: ∀ {a b c : α}, a ≠ 0 → a * b = a * c → b = c and ∀ {a b c : α}, b ≠ 0 → a * b = c * b → a = c.
+3.
+Formal name: Field.toSemifield
+Formal statement: {K : Type u_3} → [inst : Field K] → Semifield K
+Informal name: Field Implies Commutative Division Semiring
+Informal statement: For any type \( K \) that is a field, \( K \) is also a commutative division semiring. This instance asserts that a field, which is a commutative ring with multiplicative inverses for all non-zero elements, inherits the properties of a semifield, including the existence of a multiplicative identity, and the operation of multiplication by the inverse of a non-zero element.
+4.
+Formal name: Semifield.toDivisionSemiring
+Formal statement: {α : Type u_4} → [self : Semifield α] → DivisionSemiring α
+Informal name: Commutative Division Semiring as Division Semiring
+Informal statement: For any commutative division semiring \( \alpha \), it is also a division semiring. This instance asserts that a commutative division semiring, which is a commutative semiring with multiplicative inverses for nonzero elements, inherits the properties of a division semiring, ensuring that every nonzero element has a multiplicative inverse.
+**Neighbor statements:**
+1.
+Formal name: div_sub'
+Formal statement: ∀ {K : Type u_3} [inst : Field K] (a b c : K), c ≠ 0 → a / c - b = (a - c * b) / c
+Informal name: Subtraction of Quotient and Element in Fields
+Informal statement: For any field $K$ and elements $a$, $b$, and $c$ in $K$, if $c$ is nonzero, then the difference between the quotient $a$ divided by $c$ and $b$ is equal to the quotient of the difference between $a$ and the product of $c$ and $b$, all divided by $c$.
+2.
+Formal name: RingHom.injective
+Formal statement: ∀ {α : Type u_1} {β : Type u_2} [inst : DivisionRing α] [inst_1 : Semiring β] [inst_2 : Nontrivial β] (f : α →+* β),
+  Injective ⇑f
+Informal name: Injective Ring Homomorphism in Division Rings and Semirings
+Informal statement: For any division ring $\alpha$, semiring $\beta$ with a nontrivial structure, and ring homomorphism $f : \alpha \rightarrow \beta$, the function $f$ is injective. This means that for any two elements $a_1, a_2 \in \alpha$, if $f(a_1) = f(a_2)$, then $a_1 = a_2$. In other words, $f$ maps distinct elements of $\alpha$ to distinct elements of $\beta$.
+**Similar translation examples:**
+1.
+Formal name: Fintype.fieldOfDomain
+Formal statement: (R : Type u_3) → [inst : CommRing R] → [inst : IsDomain R] → [inst : DecidableEq R] → [inst : Fintype R] → Field R
+Informal name: Finite Commutative Integral Domain is a Field
+Informal statement: Every finite commutative domain is a field. More generally, commutativity is not required: this can be found in `Mathlib.RingTheory.LittleWedderburn`.
+2.
+Formal name: Finite.isDomain_to_isField
+Formal statement: ∀ (D : Type u_1) [inst : Finite D] [inst : Ring D] [inst_1 : IsDomain D], IsField D
+Informal name: Finite Rings as Fields from Integral Domains
+Informal statement: A finite domain is a field.
+3.
+Formal name: IsFractionRing.isDomain
+Formal statement: ∀ (A : Type u_4) [inst : CommRing A] [inst_1 : IsDomain A] {K : Type u_5} [inst_2 : CommRing K] [inst_3 : Algebra A K]
+  [inst : IsFractionRing A K], IsDomain K
+Informal name: Preservation of Domain Property in Localization of Commutative Rings
+Informal statement: A `CommRing` `K` which is the localization of an integral domain `R` at `R - {0}` is an integral domain.
+
+**Formal name:**
+Field.isDomain
+**Formal statement:**
+∀ {K : Type u_3} [inst : Field K], IsDomain K
+
+### Output 1:
+**Informal statement:**
+For any field $K$, $K$ is also a domain.
+**End of informal statement**
+**Informal name:**
+Fields are Domains
+
+### Now, your input is:
+{{ format_input(input) }}

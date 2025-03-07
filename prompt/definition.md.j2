@@ -1,0 +1,103 @@
+{% from "lib.j2" import format_input %}
+# Prompt for mathlib translator
+
+Suppose you are an expert mathematician and an expert in Lean and Mathlib.
+
+1. Your task is to first translate the formal definition provided below into an informal statement that is more accessible to mathematicians written in Latex. There are six parts of information attached to the definition.
+
+   * Head statements, including important statements, theorems, definitions of the mathmatical field the theorem in.
+   * The kind of the statement. It could be a definition, a structure, a class, an inductive, a classInductive or an opaque.
+   * Docstrings. In most cases, the docstrings contains the informal explanation of the formal statement, written by human. In this case, you should make good use of the doctrings and include all mathematical information in the docstrings in your translation of statement. Sometimes the docstring also contains implimentation notes, which should not appear in your translation.
+   * Neighbor statements that are next to the given statement.
+   * Dependent definitions or statements used in the definition.
+   * Similar translation exemplary statements. They are written by human and attached information of the exemplary statements and of high quality. You should learn their way of using the information and follow their style of informalization.
+
+   Utilize these information to better understand the formal definition. Make sure you follow the principles of informal statement when you translate the formal definition into informal statement.
+
+2. Then create an informal name. Use the provided formal name of the statement according to the naming conventions. Utilize the informal statement written in the first task. Make sure you follow the principles of informal name when you create an informal names. Principles of informal statement should also be conformed as possible as you can.
+
+## Principles of informal statement
+
+1. The informal statement should be written in human-used mathematical notations and formulas in latex as much as possible, explain the meaning of the symbols therein. Explain more detailed mathemathtical setup only if the definition appeared in the statement is not commonly accepted. Both of inputs and values of the definition should be expressed using mathematical formulas as much as possible.
+   Example:
+   DO NOT use "`Real.log`";
+   Use "$\log$" instead.
+2. DO NOT add any additional information that does not appear in the formal statement. The only exception is the explaination of an unfamiliar definition in the statement.
+   Example:
+   DO NOT translate `cos Real.pi = -1` as "$\cos \pi = -1$. This follows from ...", the whole part "This follows from ..." should be deleted since it does not appear in the statement.
+   Leave only the part "$\cos \pi = -1$".
+
+## Principles of informal name
+
+1. Emphasize the core concepts in the definition. The definition name should not merely list concepts; Use words that indicate logical relationships and clearly state the conclusion.
+   Example:
+   Use "A equals to B" or "A implies B" (or simply "$A = B$" and "$A \to B$"), instead of "theorem of A and B" when the theorem states the result of `A = B` or `A → B`. Both of inputs and values of the definition should be expressed using mathematical formulas as much as possible.
+2. Be as concise as possible on this basis. Use mathematical formulas in the informal name if possible.
+   Example:
+   "$\pi > 3$" is concise name for `theorem Real.pi_gt_three`.
+
+**Warning: The following example is only used to demonstrate the format, their exact meaning is irrelevant.**
+
+### Input 1:
+
+**Head statements:**
+
+# The complex numbers
+
+The complex numbers are modelled as ℝ^2 in the obvious way and it is shown that they form a field
+of characteristic zero. The result that the complex numbers are algebraically closed, see
+`FieldTheory.AlgebraicClosure`.
+
+**Kind:**
+definition
+**Docstring:**
+
+**Dependent statements:**
+1.
+Formal name: Real
+Formal statement: Type
+Informal name: Real Numbers as Cauchy Sequences
+Informal statement: The structure `Real` represents the type of real numbers, constructed as equivalence classes of Cauchy sequences of rational numbers. This approach is chosen due to the ease of proving that the real numbers form a commutative ring by lifting operations to the rational numbers. The properties of being an Archimedean floor ring and a conditionally complete linear order are not included in this structure but are addressed in the file `Mathlib/Data/Real/Archimedean.lean` to simplify the imports.
+
+**Neighbor statements:**
+1.
+Formal name: Complex.addCommGroup.proof_4
+Formal statement: ∀ (x : ℂ), (fun n z => n • z) 0 x = 0
+Informal name: Scalar Multiplication by Zero in Complex Numbers
+Informal statement: For any complex number $x$, the result of applying the scalar multiplication function with the natural number 0 to $x$ is equal to the zero complex number.
+2.
+Formal name: Complex.addCommGroup.proof_10
+Formal statement: ∀ (a : ℂ), -a + a = 0
+Informal name: Additive Inverse Property in Complex Numbers
+Informal statement: For any complex number $a$, the sum of the negation of $a$ and $a$ itself is equal to the additive identity, which is the complex number $0$. In other words, the additive inverse of $a$ added to $a$ results in the zero complex number.
+**Similar translation examples:**
+1.
+Formal name: Complex.imLm
+Formal statement: ℂ →ₗ[ℝ] ℝ
+Informal name: Imaginary Part Linear Map
+Informal statement: Linear map version of the imaginary part function, from `ℂ` to `ℝ`.
+2.
+Formal name: Complex.imCLM
+Formal statement: ℂ →L[ℝ] ℝ
+Informal name: Continuous Linear Map of Imaginary Part
+Informal statement: Continuous linear map version of the imaginary part function, from `ℂ` to `ℝ`.
+3.
+Formal name: Complex.im_eq_sub_conj
+Formal statement: ∀ (z : ℂ), ↑z.im = (z - (starRingEnd ℂ) z) / (2 * Complex.I)
+Informal name: Imaginary Part as Difference with Conjugate over 2i
+Informal statement: A complex number `z` minus its conjugate `conj z` is `2i` times its imaginary part.
+
+**Formal name:**
+Complex.im
+**Formal statement:**
+ℂ → ℝ
+
+### Output 1:
+**Informal statement:**
+The function maps a complex number \( z \) to its imaginary part \( \text{Im} z \) as a real number.
+**End of informal statement**
+**Informal name:**
+Imaginary part of a complex number
+
+### Now, your input is:
+{{ format_input(input) }}

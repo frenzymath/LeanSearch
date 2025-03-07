@@ -1,0 +1,43 @@
+{% macro format_item(i) -%}
+Formal name: {{ i.name|pp_name }}
+Formal statement: {{ i.description }}
+{% if i.informal_name is not none %}
+Informal name: {{ i.informal_name }}
+{% endif %}
+{% if i.informal_description is not none %}
+Informal statement: {{ i.informal_description }}
+{% endif %}
+{%- endmacro %}
+
+{% macro format_input(input) -%}
+**Head statements:**
+{{ input.header }}
+
+**Kind:**
+{{ input.kind }}
+
+**Docstring:**
+{{ input.docstring }}
+
+**Dependent statements:**
+{% for i in input.dependency -%}
+{{ loop.index }}.
+{{ format_item(i) }}
+{%- endfor -%}
+
+**Neighbor statements:**
+{% for i in input.neighbor -%}
+{{ loop.index }}.
+{{ format_item(i) }}
+{%- endfor -%}
+
+**Formal name:**
+{{ input.name|pp_name }}
+
+**Formal statement:**
+{{ input.signature }}
+{% if input.value_matters %}
+**Formal definition:**
+{{ input.value }}
+{% endif %}
+{%- endmacro %}

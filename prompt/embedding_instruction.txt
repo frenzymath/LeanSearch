@@ -1,0 +1,1 @@
+Represent the given formal math statement written in Lean4 concatenated with its natural language explanation for retrieving related statement by natural language query

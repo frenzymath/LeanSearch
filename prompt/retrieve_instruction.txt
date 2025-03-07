@@ -1,0 +1,1 @@
+Given a math search query, retrieve theorems stated in bilingual Lean4 + natural language that mathematically match the query
