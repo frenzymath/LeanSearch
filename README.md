@@ -21,9 +21,13 @@ python -m pip install -r requirements.txt
 
 ### Indexing a project
 
-To use LeanSearch with a project, it must first be indexed.  Run `python -m database` to create the index.
+To use LeanSearch with a project, it must first be indexed.  Run `python -m database <project root> <prefixes>` to create the index.
 
-Note that indexing a large project like Mathlib requires a significant amount of both API call cost and computational power.  Use with caution. 
+`project root`: Path to the project to index.  This is where the `lakefile.toml` or `lakefile.lean` is located.
+
+`prefixes`: Comma-separated list of module prefixes.  A module is indexed only if its module path starts with one of prefixes listed here.  For example, `Init,Lean,Mathlib` will include only `Init.*`, `Lean.*`, and `Mathlib.*` modules.
+
+Note that indexing a large project like Mathlib requires a significant amount of both API calls (to create informal descriptions) and computational power (to compute the semantic embedding).  Use with caution. 
 
 ### Searching
 
@@ -34,9 +38,7 @@ Run `python -m search <query1> <query2> ...` to search the database.  Note that 
 LeanSearch is configured through multiple environment variables.  All the variables listed below are **required** unless otherwise noted. 
 
 - `JIXIA_PATH`: executable path of `jixia`.  For example, suppose jixia was downloaded to `/home/tony/jixia` then `JIXIA_PATH` should be set to `/home/tony/jixia/.lake/build/bin/jixia`.
-- `PROJECT_ROOT`: path to the project to be indexed, e.g., `/home/tony/mathlib4`.
 - `LEAN_SYSROOT`: system root of your Lean 4 installation.  This can be found out by running `lake env` and copy the `LEAN_SYSROOT` line.
-- `LEAN_PREFIXES`
 - `CONNECTION_STRING`: [connection string](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING) used to connect to the PostgreSQL database. For a simple local setup, set this to `dbname=<database name>`.
 - `CHROMA_PATH`: location to store ChromaDB files.
 - `OPENAI_API_KEY`: OpenAI-compatible API key.
@@ -53,10 +55,8 @@ We strongly recommend using DeepSeek v3 model for a balance between quality and 
 
 LeanSearch supports [dotenv](https://github.com/theskumar/python-dotenv) for easy environment variable management.  You can create a file in this directory named `.env` and put environment variables there.  As an example, this repository is developed under these settings:
 ```shell
-JIXIA_PATH=".../jixia/.lake/build/bin/jixia"
-PROJECT_ROOT=".../mathlib4"
-LEAN_SYSROOT=".../.elan/toolchains/leanprover--lean4---v4.13.0"
-LEAN_PREFIXES="Mathlib,Init,Lean"
+JIXIA_PATH="<...>/jixia/.lake/build/bin/jixia"
+LEAN_SYSROOT="<...>/.elan/toolchains/leanprover--lean4---v4.13.0"
 CONNECTION_STRING="dbname=mathlib4"
 CHROMA_PATH="chroma"
 OPENAI_API_KEY=<redacted>
