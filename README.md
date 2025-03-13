@@ -62,5 +62,5 @@ CHROMA_PATH="chroma"
 OPENAI_API_KEY=<redacted>
 OPENAI_BASE_URL="https://api.deepseek.com"
 OPENAI_MODEL="deepseek-chat"
-LOGGING_LEVEL="INFO"
+LOG_LEVEL="INFO"
 ```
