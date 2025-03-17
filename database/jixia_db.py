@@ -6,95 +6,94 @@ from typing import LiteralString
 
 from jixia import LeanProject
 from jixia.structs import LeanName, Symbol, Declaration, is_internal
-from psycopg import Cursor
+from psycopg import Connection
 from psycopg.errors import DuplicateObject
 from psycopg.types.json import Jsonb
 
 logger = logging.getLogger(__name__)
 
 
-def create_table(cur: Cursor):
-    sql: list[LiteralString] = [
-        """
-        CREATE TABLE IF NOT EXISTS module (
-            name JSONB PRIMARY KEY,
-            content BYTEA NOT NULL,
-            docstring TEXT
-        )
-        """,
+def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
+    def create_table():
+        sql: list[LiteralString] = [
+            """
+            CREATE TABLE IF NOT EXISTS module (
+                name JSONB PRIMARY KEY,
+                content BYTEA NOT NULL,
+                docstring TEXT
+            )
+            """,
 
-        """
-        CREATE TYPE declaration_kind AS ENUM (
-            'abbrev',
-            'axiom',
-            'classInductive',
-            'definition',
-            'example',
-            'inductive',
-            'instance',
-            'opaque',
-            'structure',
-            'theorem',
-            'proofWanted'
-        )
-        """,
+            """
+            CREATE TYPE declaration_kind AS ENUM (
+                'abbrev',
+                'axiom',
+                'classInductive',
+                'definition',
+                'example',
+                'inductive',
+                'instance',
+                'opaque',
+                'structure',
+                'theorem',
+                'proofWanted'
+            )
+            """,
 
-        """
-        CREATE TABLE IF NOT EXISTS symbol (
-            name JSONB PRIMARY KEY,
-            module_name JSONB REFERENCES module(name) NOT NULL,
-            type TEXT NOT NULL,
-            is_prop BOOLEAN NOT NULL
-        )
-        """,
+            """
+            CREATE TABLE IF NOT EXISTS symbol (
+                name JSONB PRIMARY KEY,
+                module_name JSONB REFERENCES module(name) NOT NULL,
+                type TEXT NOT NULL,
+                is_prop BOOLEAN NOT NULL
+            )
+            """,
 
-        """
-        CREATE TABLE IF NOT EXISTS declaration (
-            module_name JSONB REFERENCES module(name) NOT NULL,
-            index INTEGER NOT NULL,
-            name JSONB UNIQUE REFERENCES symbol(name),
-            visible BOOLEAN NOT NULL,
-            docstring TEXT,
-            kind declaration_kind NOT NULL,
-            signature TEXT NOT NULL,
-            value TEXT,
-            PRIMARY KEY (module_name, index)
-        )
-        """,
+            """
+            CREATE TABLE IF NOT EXISTS declaration (
+                module_name JSONB REFERENCES module(name) NOT NULL,
+                index INTEGER NOT NULL,
+                name JSONB UNIQUE REFERENCES symbol(name),
+                visible BOOLEAN NOT NULL,
+                docstring TEXT,
+                kind declaration_kind NOT NULL,
+                signature TEXT NOT NULL,
+                value TEXT,
+                PRIMARY KEY (module_name, index)
+            )
+            """,
 
-        """
-        CREATE TABLE IF NOT EXISTS dependency (
-            source JSONB REFERENCES symbol(name) NOT NULL,
-            target JSONB REFERENCES symbol(name) NOT NULL,
-            on_type BOOLEAN NOT NULL,
-            PRIMARY KEY (source, target, on_type)
-        )
-        """,
+            """
+            CREATE TABLE IF NOT EXISTS dependency (
+                source JSONB REFERENCES symbol(name) NOT NULL,
+                target JSONB REFERENCES symbol(name) NOT NULL,
+                on_type BOOLEAN NOT NULL,
+                PRIMARY KEY (source, target, on_type)
+            )
+            """,
 
-        """
-        CREATE TABLE IF NOT EXISTS level (
-            symbol_name JSONB PRIMARY KEY REFERENCES symbol(name) NOT NULL,
-            level INTEGER NOT NULL
-        )
-        """,
+            """
+            CREATE TABLE IF NOT EXISTS level (
+                symbol_name JSONB PRIMARY KEY REFERENCES symbol(name) NOT NULL,
+                level INTEGER NOT NULL
+            )
+            """,
 
-        """
-        CREATE TABLE IF NOT EXISTS informal (
-            symbol_name JSONB PRIMARY KEY REFERENCES symbol(name) NOT NULL,
-            name TEXT NOT NULL,
-            description TEXT NOT NULL
-        )
-        """,
-    ]
+            """
+            CREATE TABLE IF NOT EXISTS informal (
+                symbol_name JSONB PRIMARY KEY REFERENCES symbol(name) NOT NULL,
+                name TEXT NOT NULL,
+                description TEXT NOT NULL
+            )
+            """,
+        ]
 
-    for s in sql:
-        try:
-            cur.execute(s)
-        except DuplicateObject:
-            pass
+        for s in sql:
+            try:
+                cursor.execute(s)
+            except DuplicateObject:
+                pass
 
-
-def load_data(project: LeanProject, prefixes: list[LeanName], cursor: Cursor):
     def load_module(data: Iterable[LeanName], base_dir: Path):
         values = ((
             Jsonb(m),
@@ -183,21 +182,22 @@ def load_data(project: LeanProject, prefixes: list[LeanName], cursor: Cursor):
                         EVERY(l.level IS NOT NULL) = TRUE
             """)
 
-    create_table(cursor)
-    lean_sysroot = Path(os.environ["LEAN_SYSROOT"])
-    lean_src = lean_sysroot / "src" / "lean"
-    all_modules = []
-    for d in project.root, lean_src:
-        results = project.batch_run_jixia(
-            base_dir=d,
-            prefixes=prefixes,
-            plugins=["module", "declaration", "symbol"],
-        )
-        modules = [r[0] for r in results]
-        load_module(modules, d)
-        all_modules += modules
+    with conn.cursor() as cursor:
+        create_table(cursor)
+        lean_sysroot = Path(os.environ["LEAN_SYSROOT"])
+        lean_src = lean_sysroot / "src" / "lean"
+        all_modules = []
+        for d in project.root, lean_src:
+            results = project.batch_run_jixia(
+                base_dir=d,
+                prefixes=prefixes,
+                plugins=["module", "declaration", "symbol"],
+            )
+            modules = [r[0] for r in results]
+            load_module(modules, d)
+            all_modules += modules
 
-    for m in all_modules:
-        load_symbol(m)
-        load_declaration(m)
-    topological_sort()
+        for m in all_modules:
+            load_symbol(m)
+            load_declaration(m)
+        topological_sort()
