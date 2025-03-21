@@ -199,5 +199,6 @@ def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
 
         for m in all_modules:
             load_symbol(m)
+        for m in all_modules:
             load_declaration(m)
         topological_sort()
