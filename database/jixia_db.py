@@ -183,7 +183,7 @@ def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
             """)
 
     with conn.cursor() as cursor:
-        create_table(cursor)
+        create_table()
         lean_sysroot = Path(os.environ["LEAN_SYSROOT"])
         lean_src = lean_sysroot / "src" / "lean"
         all_modules = []
