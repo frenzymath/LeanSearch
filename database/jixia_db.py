@@ -154,7 +154,7 @@ def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
             d.kind,
             d.signature.pp if d.signature.pp is not None else source[d.signature.range.as_slice()].decode(),
             source[d.value.range.as_slice()].decode() if d.value is not None else None,
-        ) for i, d in enumerate(declarations) if not is_internal(d.name))
+        ) for i, d in enumerate(declarations) if not is_internal(d.name) and d.kind != "proofWanted")
         cursor.executemany("""
             INSERT INTO declaration (module_name, index, name, visible, docstring, kind, signature, value)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING 
