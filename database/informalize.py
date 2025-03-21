@@ -22,7 +22,7 @@ def find_neighbor(conn: Connection, module_name: LeanName, index: int, num_neigh
             WHERE
                 d.module_name = %s AND d.index >= %s AND d.index <= %s
         """, (Jsonb(module_name), index - num_neighbor, index + num_neighbor))
-    return cursor.fetchall()
+        return cursor.fetchall()
 
 
 def find_dependency(conn: Connection, name: LeanName) -> list[TranslatedItem]:
@@ -36,7 +36,7 @@ def find_dependency(conn: Connection, name: LeanName) -> list[TranslatedItem]:
             WHERE
                 e.source = %s
         """, (Jsonb(name),))
-    return cursor.fetchall()
+        return cursor.fetchall()
 
 
 async def run_multiple(tasks):
