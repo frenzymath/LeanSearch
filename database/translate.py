@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import re
 from dataclasses import dataclass
 from json import JSONDecodeError
@@ -39,7 +40,11 @@ class TranslationInput:
 
 class TranslationEnvironment:
     def __init__(self, model: str):
-        self.env = Environment(loader=FileSystemLoader("prompt"), enable_async=True, undefined=jinja2.StrictUndefined)
+        self.env = Environment(
+            loader=FileSystemLoader(os.environ.get("PROMPT_DIR", "prompt")),
+            enable_async=True,
+            undefined=jinja2.StrictUndefined,
+        )
         self.env.filters["pp_name"] = pp_name
         self.template = {
             kind: self.env.get_template(f"{kind}.md.j2")
