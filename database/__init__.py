@@ -22,6 +22,7 @@ def main():
     )
     informal_parser = subparser.add_parser("informal")
     informal_parser.set_defaults(command="informal")
+    informal_parser.add_argument("--batch-size", type=int, default=50)
     informal_parser.add_argument(
         "--limit-level", type=int,
         help="Limit max level. Used for testing.",
@@ -42,6 +43,11 @@ def main():
             prefixes = [parse_name(p) for p in args.prefixes.split(",")]
             load_data(project, prefixes, conn)
         elif args.command == "informal":
-            generate_informal(conn, limit_level=args.limit_level, limit_num_per_level=args.limit_num_per_level)
+            generate_informal(
+                conn,
+                batch_size=args.batch_size,
+                limit_level=args.limit_level,
+                limit_num_per_level=args.limit_num_per_level,
+            )
         elif args.command == "vector-db":
             create_vector_db(conn, os.environ["CHROMA_PATH"], batch_size=args.batch_size)

@@ -30,10 +30,7 @@ def create_vector_db(conn: Connection, path: str, batch_size: int):
 
         batch_doc = []
         batch_id = []
-        while True:
-            batch = cursor.fetchmany(batch_size)
-            if not batch:
-                break
+        while batch := cursor.fetchmany(batch_size):
             batch_doc.clear()
             batch_id.clear()
             for module_name, index, kind, name, signature, informal_name, informal_description in batch:
