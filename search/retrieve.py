@@ -11,11 +11,12 @@ from database.embedding import MistralEmbedding
 
 @dataclass
 class QueryResult:
+    module: LeanName
     kind: DeclarationKind
     name: LeanName
     signature: str
     value: str | None
-    module: LeanName
+    docstring: str | None
     informal_name: str
     informal_description: str
     distance: float
@@ -45,14 +46,11 @@ class Retriever:
                     module_name, _, index = doc_id.partition(":")
                     module_name = parse_name(module_name)
                     cursor.execute("""
-                        SELECT d.kind, d.name, d.signature, d.value, i.name, i.description
+                        SELECT d.kind, d.name, d.signature, d.value, d.docstring, i.name, i.description
                         FROM declaration d INNER JOIN informal i ON d.name = i.symbol_name
                         WHERE d.module_name = %s AND d.index = %s
                     """, (Jsonb(module_name), index))
-                    kind, name, signature, value, informal_name, informal_description = cursor.fetchone()
-                    current_results.append(QueryResult(
-                        kind, name, signature, value, module_name,
-                        informal_name, informal_description, distance,
-                    ))
+                    data = cursor.fetchone()
+                    current_results.append(QueryResult(module_name, *data, distance))
             ret.append(current_results)
         return ret
