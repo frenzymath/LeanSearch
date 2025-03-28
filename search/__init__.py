@@ -14,10 +14,12 @@ def main(query: list[str], num_results: int, json_output: bool):
         if json_output:
             print(TypeAdapter(list[list[QueryResult]]).dump_json(results))
         else:
-            for q, r in zip(query, results):
+            for q, rs in zip(query, results):
                 print("Results for", q)
-                for i, record in enumerate(r):
+                for i, r in enumerate(rs):
+                    record = r.record
                     print(str(i) + ":")
+                    print("Distance:", r.distance)
                     print(record.kind, pp_name(record.name), record.signature)
                     print(record.informal_name + ":", record.informal_description)
                     print()

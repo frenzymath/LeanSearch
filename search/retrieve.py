@@ -3,15 +3,15 @@ import os
 import chromadb
 from jixia.structs import LeanName, DeclarationKind, parse_name
 from psycopg import Connection
+from psycopg.rows import class_row
 from psycopg.types.json import Jsonb
-from pydantic.dataclasses import dataclass
+from pydantic import BaseModel
 
 from database.embedding import MistralEmbedding
 
 
-@dataclass
-class QueryResult:
-    module: LeanName
+class Record(BaseModel):
+    module_name: LeanName
     kind: DeclarationKind
     name: LeanName
     signature: str
@@ -19,6 +19,10 @@ class QueryResult:
     docstring: str | None
     informal_name: str
     informal_description: str
+
+
+class QueryResult(BaseModel):
+    record: Record
     distance: float
 
 
@@ -39,18 +43,20 @@ class Retriever:
             include=["distances"],
         )
         ret = []
-        with self.conn.cursor() as cursor:
+        with self.conn.cursor(row_factory=class_row(Record)) as cursor:
             for ids, distances in zip(results["ids"], results["distances"]):
                 current_results = []
                 for doc_id, distance in zip(ids, distances):
                     module_name, _, index = doc_id.partition(":")
                     module_name = parse_name(module_name)
                     cursor.execute("""
-                        SELECT d.kind, d.name, d.signature, d.value, d.docstring, i.name, i.description
+                        SELECT
+                            d.module_name, d.kind, d.name, d.signature, d.value, d.docstring,
+                            i.name AS informal_name, i.description AS informal_description
                         FROM declaration d INNER JOIN informal i ON d.name = i.symbol_name
                         WHERE d.module_name = %s AND d.index = %s
                     """, (Jsonb(module_name), index))
-                    data = cursor.fetchone()
-                    current_results.append(QueryResult(module_name, *data, distance))
+                    record = cursor.fetchone()
+                    current_results.append(QueryResult(record=record, distance=distance))
             ret.append(current_results)
         return ret
