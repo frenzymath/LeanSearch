@@ -1,6 +1,7 @@
 import os
 
 import chromadb
+import torch.cuda
 from jixia.structs import pp_name
 from psycopg import Connection
 
@@ -11,7 +12,11 @@ def create_vector_db(conn: Connection, path: str, batch_size: int):
     with open("prompt/embedding_instruction.txt") as fp:
         instruction = fp.read()
     MistralEmbedding.setup_env()
-    embedding = MistralEmbedding(os.environ.get("EMBEDDING_DEVICE", "cpu"), instruction)
+    try:
+        device = os.environ["EMBEDDING_DEVICE"]
+    except KeyError:
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+    embedding = MistralEmbedding(device, instruction)
 
     client = chromadb.PersistentClient(path)
     collection = client.create_collection(
@@ -34,7 +39,7 @@ def create_vector_db(conn: Connection, path: str, batch_size: int):
             batch_doc.clear()
             batch_id.clear()
             for module_name, index, kind, name, signature, informal_name, informal_description in batch:
-                # NOTE: since the module name cannot contain special characters, we use module name + index as document id
+                # NOTE: we use module name + index as document id as they cannot contain special characters
                 doc = f"{kind} {name} {signature}\n{informal_name}: {informal_description}"
                 batch_doc.append(doc)
                 doc_id = f"{pp_name(module_name)}:{index}"
