@@ -1,0 +1,3 @@
+POST http://localhost:8000/search
+
+{"query":["Hello world","rank-nullity theorem","Haar measure","Caylay-Hamilton-theorem"],"num_results":5}
