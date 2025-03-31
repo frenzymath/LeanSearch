@@ -31,7 +31,7 @@ Note that indexing a large project like Mathlib requires a significant amount of
 
 ### Searching
 
-Run `python -m search <query1> <query2> ...` to search the database.  Note that queries containing whitespaces must be quoted, e.g., `python -m "Hello world"`
+Run `python search.py <query1> <query2> ...` to search the database.  Note that queries containing whitespaces must be quoted, e.g., `python search.py "Hello world"`
 
 ### Environment variables
 

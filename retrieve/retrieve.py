@@ -15,6 +15,7 @@ class Record(BaseModel):
     kind: DeclarationKind
     name: LeanName
     signature: str
+    type: str
     value: str | None
     docstring: str | None
     informal_name: str
@@ -22,7 +23,7 @@ class Record(BaseModel):
 
 
 class QueryResult(BaseModel):
-    record: Record
+    result: Record
     distance: float
 
 
@@ -51,12 +52,15 @@ class Retriever:
                     module_name = parse_name(module_name)
                     cursor.execute("""
                         SELECT
-                            d.module_name, d.kind, d.name, d.signature, d.value, d.docstring,
+                            d.module_name, d.kind, d.name, d.signature, s.type, d.value, d.docstring,
                             i.name AS informal_name, i.description AS informal_description
-                        FROM declaration d INNER JOIN informal i ON d.name = i.symbol_name
+                        FROM
+                            declaration d
+                            INNER JOIN informal i ON d.name = i.symbol_name
+                            INNER JOIN symbol s ON d.name = s.name
                         WHERE d.module_name = %s AND d.index = %s
                     """, (Jsonb(module_name), index))
-                    record = cursor.fetchone()
-                    current_results.append(QueryResult(record=record, distance=distance))
-            ret.append(current_results)
+                    result = cursor.fetchone()
+                    current_results.append(QueryResult(result=result, distance=distance))
+                ret.append(current_results)
         return ret
