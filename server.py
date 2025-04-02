@@ -3,12 +3,15 @@ from typing import Annotated
 
 import dotenv
 import psycopg
-import uvicorn
 from fastapi import FastAPI, Body
 
 from retrieve import QueryResult, Retriever
 
+dotenv.load_dotenv()
+conn = psycopg.connect(os.environ["CONNECTION_STRING"])
+retriever = Retriever(os.environ["CHROMA_PATH"], conn)
 app = FastAPI()
+
 
 @app.post("/search")
 def search(
@@ -16,10 +19,3 @@ def search(
         num_results: Annotated[int, Body(gt=0, le=50)] = 10,
 ) -> list[list[QueryResult]]:
     return retriever.batch_search(query, num_results)
-
-
-if __name__ == '__main__':
-    dotenv.load_dotenv()
-    with psycopg.connect(os.environ["CONNECTION_STRING"]) as conn:
-        retriever = Retriever(os.environ["CHROMA_PATH"], conn)
-        uvicorn.run(app)

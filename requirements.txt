@@ -13,9 +13,12 @@ click==8.1.8
 coloredlogs==15.0.1
 Deprecated==1.2.18
 distro==1.9.0
+dnspython==2.7.0
 dotenv==0.9.9
 durationpy==0.9
+email_validator==2.2.0
 fastapi==0.115.11
+fastapi-cli==0.0.7
 filelock==3.17.0
 flatbuffers==25.2.10
 fsspec==2025.2.0
@@ -72,11 +75,13 @@ PyPika==0.48.9
 pyproject_hooks==1.2.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
+python-multipart==0.0.20
 PyYAML==6.0.2
 regex==2024.11.6
 requests==2.32.3
 requests-oauthlib==2.0.0
 rich==13.9.4
+rich-toolkit==0.14.1
 rsa==4.9
 safetensors==0.5.3
 shellingham==1.5.4
