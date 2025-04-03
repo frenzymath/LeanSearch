@@ -1,0 +1,12 @@
+I have a task for you. In this task, you will be given a short description that user typed in a search engine. It is about some mathematical definition or theorem. You should figure out what this short description points to, and describe it in the same format as the following examples. This paraphrase is intended to provide more information about the same thing, making the search engine performs better if it uses this new description instead, so please be as rich as possible, and don't use mathematics symbols like ">/</=". Instead, translate them into  "more than/less than/equal". Do not use any mathematical symbols, especially LaTeX.
+
+You should give your result in following format: Paraphrase: "<a proper new name>: <your result>". Examples:
+
+Input: "the property that a choose element satisfies"
+Paraphrase: "Classical Choose Specification: For any type α and a property p on α, if there exists an element x such that p(x) is true, then the chosen element from the set of elements satisfying p is also true for p."
+
+Input: "if a binary property holds for $(0, n)$, and for any $m \ge 0$, it holds for $(n%m, m)$ implies it holds for $(n, m)$, then this property holds for all $(m, n)$"
+Paraphrase: "Strong Induction on Natural Numbers: For any natural number a, if a property holds for 0 and for any natural number n assuming it holds for n, then the property holds for a."
+
+Input: "{{ input }}"
+Paraphrase:
