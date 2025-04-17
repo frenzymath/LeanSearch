@@ -25,12 +25,12 @@ python -m pip install -r requirements.txt
 
    Memorize the database name, you will later need to set it in your `.env` file.
 
-### Install Jixia
+### Install jixia
 
-1. Clone the Jixia repo: `git clone git@github.com:frenzymath/jixia.git`; `cd jixia`
+1. Clone the jixia repo: `git clone git@github.com:frenzymath/jixia.git`; `cd jixia`
 2. Make sure `lean-toolchain` in jixia and `lean-toolchain` in the project you will be indexing match.  
 	 If Lean versions don't match, you will get `"... failed to read file ..., invalid header"` error when you try to index the project.
-3. Build Jixia: `lake build` (should take around 70s)
+3. Build jixia: `lake build` (should take around 70s)
 
 ### Set up the .env file
 
@@ -50,7 +50,7 @@ python -m pip install -r requirements.txt
 
 ### Indexing
 
-1. **Index your Lean project** (uses Jixia, puts results into PostgreSQL)
+1. **Index your Lean project** (uses jixia, puts results into PostgreSQL)
    
    ```shell
    python -m database <project root> <prefixes>
