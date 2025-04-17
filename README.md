@@ -4,22 +4,37 @@
 
 Also see [Herald](https://arxiv.org/abs/2410.10878v2) for the idea used to translate formal statements into natural language.
 
-### Prerequisite
+## Installation
 
-LeanSearch depends on [jixia](https://github.com/frenzymath/jixia) for static analysis.  You need to download and build it with `lake build`.
+### Install Python deps
 
-LeanSearch utilizes PostgreSQL as the relational database.  You can find the installation guide [here](https://www.postgresql.org/download/).
-
-You need to create the PostgreSQL database before running LeanSearch with the command `createdb <database-name>`.
-
-It is recommended to install LeanSearch in a Python virtual environment.
 ```shell
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-### Indexing a project
+### Install Postgres
+
+1. Download PostgreSQL (you can find the installation guide [here](https://www.postgresql.org/download)).
+2. Create database:
+
+   ```
+   createdb my_database_name
+   ```
+
+   Memorize the database name, you will later need to set it in your `.env` file.
+
+### Install Jixia
+
+1. Clone the Jixia repo: `git clone git@github.com:frenzymath/jixia.git`; `cd jixia`
+2. Make sure `lean-toolchain` in jixia and `lean-toolchain` in the project you will be indexing match.  
+	 If Lean versions don't match, you will get `"... failed to read file ..., invalid header"` error when you try to index the project.
+3. Build Jixia: `lake build` (should take around 70s)
+
+## Usage
+
+### Indexing
 
 To use LeanSearch with a project, it must first be indexed.  Run `python -m database <project root> <prefixes>` to create the index.
 
