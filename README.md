@@ -50,14 +50,38 @@ python -m pip install -r requirements.txt
 
 ### Indexing
 
-To use LeanSearch with a project, it must first be indexed.  Run `python -m database <project root> <prefixes>` to create the index.
+1. **Index your Lean project** (uses Jixia, puts results into PostgreSQL)
+   
+   ```shell
+   python -m database <project root> <prefixes>
+   ```
 
-`project root`: Path to the project to index.  This is where the `lakefile.toml` or `lakefile.lean` is located.
+    **Options**:
+    - `project root`: Path to the project to index. This is where the `lakefile.toml` or `lakefile.lean` is located.
+    - `prefixes`: Comma-separated list of module prefixes. A module is indexed only if its module path starts with one of prefixes listed here.  For example, `Init,Lean,Mathlib` will include only `Init.*`, `Lean.*`, and `Mathlib.*` modules.
 
-`prefixes`: Comma-separated list of module prefixes.  A module is indexed only if its module path starts with one of prefixes listed here.  For example, `Init,Lean,Mathlib` will include only `Init.*`, `Lean.*`, and `Mathlib.*` modules.
+3. **Create informal descriptions** (uses DeepSeek api, puts results into PostgreSQL)
 
-Note that indexing a large project like Mathlib requires a significant amount of both API calls (to create informal descriptions) and computational power (to compute the semantic embedding).  Use with caution. 
+   ```shell
+   python -m database informal
+   ```
+
+   Natural-language descriptions can be created using any OpenAI-compatible API, above we advise DeepSeek.
+
+5. **Create embeddings** (uses locally-downloaded `e5-mistral-7b-instruct` model, puts results into Chromadb)
+
+   ```
+   python -m database vector-db
+   ```
+
+Note that indexing a large project like Mathlib requires a significant amount of both API calls (to create informal descriptions) and computational power (to compute the semantic embedding). Use with caution.
 
 ### Searching
 
-Run `python search.py <query1> <query2> ...` to search the database.  Note that queries containing whitespaces must be quoted, e.g., `python search.py "Hello world"`
+To search the database, run:
+
+```shell
+python search.py <query1> <query2> ...
+```
+
+Note that queries containing whitespaces must be quoted, e.g., `python search.py "Hello world"`.
