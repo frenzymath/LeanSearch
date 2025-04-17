@@ -32,6 +32,20 @@ python -m pip install -r requirements.txt
 	 If Lean versions don't match, you will get `"... failed to read file ..., invalid header"` error when you try to index the project.
 3. Build Jixia: `lake build` (should take around 70s)
 
+### Set up the .env file
+
+1. Copy the `.env.example` file to `.env`:
+
+   ```shell
+   cp .env.example .env
+   ```
+
+2. Edit the `.env` file and set the required variables according to your setup.
+
+> [!NOTE]  
+> We strongly recommend using DeepSeek v3 model for a balance between quality and cost.  
+> In this case, `OPENAI_API_KEY` should be set to your DeepSeek api key, `OPENAI_BASE_URL` should be set to `https://api.deepseek.com`, and `OPENAI_MODEL` should be set to `deepseek-chat`.
+
 ## Usage
 
 ### Indexing
@@ -47,35 +61,3 @@ Note that indexing a large project like Mathlib requires a significant amount of
 ### Searching
 
 Run `python search.py <query1> <query2> ...` to search the database.  Note that queries containing whitespaces must be quoted, e.g., `python search.py "Hello world"`
-
-### Environment variables
-
-LeanSearch is configured through multiple environment variables.  All the variables listed below are **required** unless otherwise noted. 
-
-- `JIXIA_PATH`: executable path of `jixia`.  For example, suppose jixia was downloaded to `/home/tony/jixia` then `JIXIA_PATH` should be set to `/home/tony/jixia/.lake/build/bin/jixia`.
-- `LEAN_SYSROOT`: system root of your Lean 4 installation.  This can be found out by running `lake env` and copy the `LEAN_SYSROOT` line.
-- `CONNECTION_STRING`: [connection string](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING) used to connect to the PostgreSQL database. For a simple local setup, set this to `dbname=<database name>`.
-- `CHROMA_PATH`: location to store ChromaDB files.
-- `OPENAI_API_KEY`: OpenAI-compatible API key.
-- `OPENAI_BASE_URL`: OpenAI-compatible API endpoint.
-- `OPENAI_MODEL`: model to use.
-- `EMBEDDING_DEVICE`: [torch device](https://pytorch.org/docs/stable/tensor_attributes.html#torch.device) to compute the embedding.  Default is "cpu".
-- `LOG_FILENAME`: name of the log file.  Default is logging to console.
-- `LOG_FILEMODE`: log file mode.  "w" for overwriting and "a" for appending.  Default is "w".
-- `LOG_LEVEL`: log level.  Default is "WARNING". 
-
-We strongly recommend using DeepSeek v3 model for a balance between quality and cost.  In this case, `OPENAI_BASE_URL` should be set to `https://api.deepseek.com` and `OPENAI_MODEL` is `deepseek-chat`.
-
-##### Using dotenv
-
-LeanSearch supports [dotenv](https://github.com/theskumar/python-dotenv) for easy environment variable management.  You can create a file in this directory named `.env` and put environment variables there.  As an example, this repository is developed under these settings:
-```shell
-JIXIA_PATH="<...>/jixia/.lake/build/bin/jixia"
-LEAN_SYSROOT="<...>/.elan/toolchains/leanprover--lean4---v4.13.0"
-CONNECTION_STRING="dbname=mathlib4"
-CHROMA_PATH="chroma"
-OPENAI_API_KEY=<redacted>
-OPENAI_BASE_URL="https://api.deepseek.com"
-OPENAI_MODEL="deepseek-chat"
-LOG_LEVEL="INFO"
-```
