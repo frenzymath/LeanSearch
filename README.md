@@ -4,63 +4,84 @@
 
 Also see [Herald](https://arxiv.org/abs/2410.10878v2) for the idea used to translate formal statements into natural language.
 
-### Prerequisite
+## Installation
 
-LeanSearch depends on [jixia](https://github.com/frenzymath/jixia) for static analysis.  You need to download and build it with `lake build`.
+### Install Python deps
 
-LeanSearch utilizes PostgreSQL as the relational database.  You can find the installation guide [here](https://www.postgresql.org/download/).
-
-You need to create the PostgreSQL database before running LeanSearch with the command `createdb <database-name>`.
-
-It is recommended to install LeanSearch in a Python virtual environment.
 ```shell
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-### Indexing a project
+### Install Postgres
 
-To use LeanSearch with a project, it must first be indexed.  Run `python -m database <project root> <prefixes>` to create the index.
+1. Download PostgreSQL (you can find the installation guide [here](https://www.postgresql.org/download)).
+2. Create database:
 
-`project root`: Path to the project to index.  This is where the `lakefile.toml` or `lakefile.lean` is located.
+   ```
+   createdb my_database_name
+   ```
 
-`prefixes`: Comma-separated list of module prefixes.  A module is indexed only if its module path starts with one of prefixes listed here.  For example, `Init,Lean,Mathlib` will include only `Init.*`, `Lean.*`, and `Mathlib.*` modules.
+   Memorize the database name, you will later need to set it in your `.env` file.
 
-Note that indexing a large project like Mathlib requires a significant amount of both API calls (to create informal descriptions) and computational power (to compute the semantic embedding).  Use with caution. 
+### Install jixia
+
+1. Clone the jixia repo: `git clone git@github.com:frenzymath/jixia.git`; `cd jixia`
+2. Make sure `lean-toolchain` in jixia and `lean-toolchain` in the project you will be indexing match.  
+	 If Lean versions don't match, you will get `"... failed to read file ..., invalid header"` error when you try to index the project.
+3. Build jixia: `lake build` (should take around 70s)
+
+### Set up the .env file
+
+1. Copy the `.env.example` file to `.env`:
+
+   ```shell
+   cp .env.example .env
+   ```
+
+2. Edit the `.env` file and set the required variables according to your setup.
+
+> [!NOTE]  
+> We strongly recommend using DeepSeek v3 model for a balance between quality and cost.  
+> In this case, `OPENAI_API_KEY` should be set to your DeepSeek api key, `OPENAI_BASE_URL` should be set to `https://api.deepseek.com`, and `OPENAI_MODEL` should be set to `deepseek-chat`.
+
+## Usage
+
+### Indexing
+
+1. **Index your Lean project** (uses jixia, puts results into PostgreSQL)
+   
+   ```shell
+   python -m database jixia <project root> <prefixes>
+   ```
+
+    **Options**:
+    - `project root`: Path to the project to index. This is where the `lakefile.toml` or `lakefile.lean` is located.
+    - `prefixes`: Comma-separated list of module prefixes. A module is indexed only if its module path starts with one of prefixes listed here.  For example, `Init,Lean,Mathlib` will include only `Init.*`, `Lean.*`, and `Mathlib.*` modules.
+
+3. **Create informal descriptions** (uses DeepSeek api, puts results into PostgreSQL)
+
+   ```shell
+   python -m database informal
+   ```
+
+   Natural-language descriptions can be created using any OpenAI-compatible API, above we advise DeepSeek.
+
+5. **Create embeddings** (uses locally-downloaded `e5-mistral-7b-instruct` model, puts results into Chromadb)
+
+   ```
+   python -m database vector-db
+   ```
+
+Note that indexing a large project like Mathlib requires a significant amount of both API calls (to create informal descriptions) and computational power (to compute the semantic embedding). Use with caution.
 
 ### Searching
 
-Run `python search.py <query1> <query2> ...` to search the database.  Note that queries containing whitespaces must be quoted, e.g., `python search.py "Hello world"`
+To search the database, run:
 
-### Environment variables
-
-LeanSearch is configured through multiple environment variables.  All the variables listed below are **required** unless otherwise noted. 
-
-- `JIXIA_PATH`: executable path of `jixia`.  For example, suppose jixia was downloaded to `/home/tony/jixia` then `JIXIA_PATH` should be set to `/home/tony/jixia/.lake/build/bin/jixia`.
-- `LEAN_SYSROOT`: system root of your Lean 4 installation.  This can be found out by running `lake env` and copy the `LEAN_SYSROOT` line.
-- `CONNECTION_STRING`: [connection string](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING) used to connect to the PostgreSQL database. For a simple local setup, set this to `dbname=<database name>`.
-- `CHROMA_PATH`: location to store ChromaDB files.
-- `OPENAI_API_KEY`: OpenAI-compatible API key.
-- `OPENAI_BASE_URL`: OpenAI-compatible API endpoint.
-- `OPENAI_MODEL`: model to use.
-- `EMBEDDING_DEVICE`: [torch device](https://pytorch.org/docs/stable/tensor_attributes.html#torch.device) to compute the embedding.  Default is "cpu".
-- `LOG_FILENAME`: name of the log file.  Default is logging to console.
-- `LOG_FILEMODE`: log file mode.  "w" for overwriting and "a" for appending.  Default is "w".
-- `LOG_LEVEL`: log level.  Default is "WARNING". 
-
-We strongly recommend using DeepSeek v3 model for a balance between quality and cost.  In this case, `OPENAI_BASE_URL` should be set to `https://api.deepseek.com` and `OPENAI_MODEL` is `deepseek-chat`.
-
-##### Using dotenv
-
-LeanSearch supports [dotenv](https://github.com/theskumar/python-dotenv) for easy environment variable management.  You can create a file in this directory named `.env` and put environment variables there.  As an example, this repository is developed under these settings:
 ```shell
-JIXIA_PATH="<...>/jixia/.lake/build/bin/jixia"
-LEAN_SYSROOT="<...>/.elan/toolchains/leanprover--lean4---v4.13.0"
-CONNECTION_STRING="dbname=mathlib4"
-CHROMA_PATH="chroma"
-OPENAI_API_KEY=<redacted>
-OPENAI_BASE_URL="https://api.deepseek.com"
-OPENAI_MODEL="deepseek-chat"
-LOG_LEVEL="INFO"
+python search.py <query1> <query2> ...
 ```
+
+Note that queries containing whitespaces must be quoted, e.g., `python search.py "Hello world"`.
