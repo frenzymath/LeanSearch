@@ -53,7 +53,7 @@ python -m pip install -r requirements.txt
 1. **Index your Lean project** (uses jixia, puts results into PostgreSQL)
    
    ```shell
-   python -m database <project root> <prefixes>
+   python -m database jixia <project root> <prefixes>
    ```
 
     **Options**:
