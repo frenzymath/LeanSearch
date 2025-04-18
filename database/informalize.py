@@ -50,7 +50,7 @@ def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int |
     tasks = []
 
     with conn.cursor() as cursor, conn.cursor() as insert_cursor:
-        for l in range(limit_level):
+        for l in range(limit_level + 1):
             query = """
                 SELECT s.name, d.signature, d.value, d.docstring, d.kind, m.docstring, d.module_name, d.index
                 FROM
