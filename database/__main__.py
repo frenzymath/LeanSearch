@@ -10,7 +10,7 @@ dotenv.load_dotenv()
 logging.basicConfig(
     filename=os.environ.get("LOG_FILENAME"),
     filemode=os.environ.get("LOG_FILEMODE", "w"),
-    level=os.environ.get("LOG_LEVEL", "WARNING").upper(),
+    level=os.environ["LOG_LEVEL"],
 )
 jixia.run.executable = os.environ["JIXIA_PATH"]
 
