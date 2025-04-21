@@ -34,7 +34,7 @@ class Retriever:
         self.collection = self.client.get_collection(name="leansearch", embedding_function=None)
         with open("prompt/retrieve_instruction.txt") as fp:
             instruction = fp.read()
-        self.embedding = MistralEmbedding(os.environ.get("EMBEDDING_DEVICE", "cpu"), instruction)
+        self.embedding = MistralEmbedding(os.environ["EMBEDDING_DEVICE"], instruction)
 
     def batch_search(self, query: list[str], num_results: int) -> list[list[QueryResult]]:
         query_embedding = self.embedding.embed(query)

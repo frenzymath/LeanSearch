@@ -1,7 +1,6 @@
 import os
 
 import chromadb
-import torch.cuda
 from jixia.structs import pp_name
 from psycopg import Connection
 
@@ -12,11 +11,7 @@ def create_vector_db(conn: Connection, path: str, batch_size: int):
     with open("prompt/embedding_instruction.txt") as fp:
         instruction = fp.read()
     MistralEmbedding.setup_env()
-    try:
-        device = os.environ["EMBEDDING_DEVICE"]
-    except KeyError:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-    embedding = MistralEmbedding(device, instruction)
+    embedding = MistralEmbedding(os.environ["EMBEDDING_DEVICE"], instruction)
 
     client = chromadb.PersistentClient(path)
     collection = client.create_collection(
