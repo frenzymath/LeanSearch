@@ -71,6 +71,8 @@ class TranslationEnvironment:
                     messages=[
                         {"role": "user", "content": prompt},
                     ],
+                    # ___Why don't we use `response_format={ 'type': 'json_object' }`?
+                    #    DeepSeek support for json is rather limited at the moment, in our case it will be raising parse errors on LaTeX escape characters.
                     stream=False,
                 )
             except JSONDecodeError:  # DeepSeek API is not available right now
