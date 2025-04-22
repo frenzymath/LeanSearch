@@ -5,6 +5,7 @@ from typing import Annotated
 import dotenv
 import psycopg
 from fastapi import FastAPI, Body
+from jixia.structs import LeanName
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
@@ -12,7 +13,7 @@ from slowapi.util import get_remote_address
 from starlette.requests import Request
 
 from augment import Augmentor
-from retrieve import QueryResult, Retriever
+from retrieve import QueryResult, Retriever, Record
 
 
 @asynccontextmanager
@@ -37,6 +38,11 @@ def search(
         num_results: Annotated[int, Body(gt=0, le=50)] = 10,
 ) -> list[list[QueryResult]]:
     return app.retriever.batch_search(query, num_results)
+
+
+@app.post("/fetch")
+def fetch(query: list[LeanName]) -> list[Record]:
+    return app.retriever.batch_fetch(query)
 
 
 @app.post("/augment")

@@ -1,4 +1,5 @@
 import os
+from collections.abc import Iterable
 
 import chromadb
 from jixia.structs import LeanName, DeclarationKind, parse_name
@@ -35,6 +36,17 @@ class Retriever:
         with open("prompt/retrieve_instruction.txt") as fp:
             instruction = fp.read()
         self.embedding = MistralEmbedding(os.environ["EMBEDDING_DEVICE"], instruction)
+
+    def batch_fetch(self, name: Iterable[LeanName]) -> list[Record]:
+        ret = []
+        with self.conn.cursor(row_factory=class_row(Record)) as cursor:
+            for n in name:
+                cursor.execute("""
+                    SELECT * FROM record
+                    WHERE name = %s
+                """, (Jsonb(n),))
+                ret.append(cursor.fetchone())
+        return ret
 
     def batch_search(self, query: list[str], num_results: int) -> list[list[QueryResult]]:
         query_embedding = self.embedding.embed(query)
