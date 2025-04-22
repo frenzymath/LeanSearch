@@ -86,6 +86,17 @@ def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
                 description TEXT NOT NULL
             )
             """,
+
+            """
+            CREATE OR REPLACE VIEW record AS
+            SELECT
+                d.module_name, d.index, d.kind, d.name, d.signature, s.type, d.value, d.docstring,
+                i.name AS informal_name, i.description AS informal_description
+            FROM
+                declaration d
+                INNER JOIN informal i ON d.name = i.symbol_name
+                INNER JOIN symbol s ON d.name = s.name
+            """,
         ]
 
         for s in sql:

@@ -51,14 +51,8 @@ class Retriever:
                     module_name, _, index = doc_id.partition(":")
                     module_name = parse_name(module_name)
                     cursor.execute("""
-                        SELECT
-                            d.module_name, d.kind, d.name, d.signature, s.type, d.value, d.docstring,
-                            i.name AS informal_name, i.description AS informal_description
-                        FROM
-                            declaration d
-                            INNER JOIN informal i ON d.name = i.symbol_name
-                            INNER JOIN symbol s ON d.name = s.name
-                        WHERE d.module_name = %s AND d.index = %s
+                        SELECT * FROM record
+                        WHERE module_name = %s AND index = %s
                     """, (Jsonb(module_name), index))
                     result = cursor.fetchone()
                     current_results.append(QueryResult(result=result, distance=distance))
