@@ -40,13 +40,7 @@ def find_dependency(conn: Connection, name: LeanName) -> list[TranslatedItem]:
 
 
 def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int | None = None, limit_num_per_level: int | None = None):
-    max_level : int
-    if limit_level is None:
-        with conn.cursor(row_factory=scalar_row) as cursor:
-            cursor.execute("SELECT MAX(level) FROM level")
-            max_level = cursor.fetchone() or -1
-    else:
-        max_level = limit_level
+    max_level = (conn.cursor(row_factory=scalar_row).execute("SELECT MAX(level) FROM level").fetchone() or -1) if limit_level is None else limit_level
 
     tasks = []
     with conn.cursor() as cursor, conn.cursor() as insert_cursor:
