@@ -65,13 +65,14 @@ def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int |
                 async def translate_and_insert(name: LeanName, data: TranslationInput):
                     result = await env.translate(data)
                     if result is None:
-                        logger.warning("failed to translate %s", name)
+                        logger.warning(f"failed to translate {name}")
                     else:
-                        logger.info("translated %s", name)
+                        logger.info(f"translated {name}")
+                        informal_name, informal_description = result
                         insert_cursor.execute("""
                             INSERT INTO informal (symbol_name, name, description)
                             VALUES (%s, %s, %s)
-                        """, (Jsonb(name),) + result)
+                        """, (Jsonb(name), informal_name, informal_description,))
 
                 tasks.clear()
                 for row in batch:
