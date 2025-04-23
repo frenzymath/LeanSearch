@@ -82,13 +82,23 @@ def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int |
 
                 tasks.clear()
                 for row in batch:
-                    basic, (module_name, index) = row[:-2], row[-2:]
-                    n = basic[0]
-                    logger.info("translating %s", n)
+                    name, signature, value, docstring, kind, header, module_name, index = row
+
+                    logger.info(f"translating {name}")
                     neighbor = find_neighbor(conn, module_name, index)
-                    dependency = find_dependency(conn, n)
-                    ti = TranslationInput(*basic, neighbor, dependency)
-                    tasks.append(translate_and_insert(n, ti))
+                    dependency = find_dependency(conn, name)
+                    
+                    ti = TranslationInput(
+                        name=name,
+                        signature=signature,
+                        value=value,
+                        docstring=docstring,
+                        kind=kind,
+                        header=header,
+                        neighbor=neighbor,
+                        dependency=dependency
+                    )
+                    tasks.append(translate_and_insert(name, ti))
 
                 async def wait_all():
                     await asyncio.gather(*tasks)
