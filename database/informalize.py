@@ -56,9 +56,8 @@ def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int |
                     l.level = %s AND
                     (NOT EXISTS(SELECT 1 FROM informal i WHERE i.symbol_name = s.name))
             """
-            if limit_num_per_level:
-                query += f" LIMIT {limit_num_per_level}"
-            cursor.execute(query, (l,))
+            if limit_num_per_level: cursor.execute(query + " LIMIT %s", (l, limit_num_per_level,))
+            else: cursor.execute(query, (l,))
 
             while batch := cursor.fetchmany(batch_size):
                 env = TranslationEnvironment(model=os.environ["OPENAI_MODEL"])
