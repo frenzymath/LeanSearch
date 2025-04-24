@@ -49,7 +49,7 @@ def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int |
 
     tasks = []
     with conn.cursor() as cursor, conn.cursor() as insert_cursor:
-        for l in range(max_level + 1):
+        for level in range(max_level + 1):
             query = """
                 SELECT s.name, d.signature, d.value, d.docstring, d.kind, m.docstring, d.module_name, d.index
                 FROM
@@ -62,9 +62,9 @@ def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int |
                     (NOT EXISTS(SELECT 1 FROM informal i WHERE i.symbol_name = s.name))
             """
             if limit_num_per_level:
-                cursor.execute(query + " LIMIT %s", (l, limit_num_per_level,))
+                cursor.execute(query + " LIMIT %s", (level, limit_num_per_level))
             else:
-                cursor.execute(query, (l,))
+                cursor.execute(query, (level,))
 
             while batch := cursor.fetchmany(batch_size):
                 env = TranslationEnvironment(model=os.environ["OPENAI_MODEL"])
@@ -79,7 +79,7 @@ def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int |
                         insert_cursor.execute("""
                             INSERT INTO informal (symbol_name, name, description)
                             VALUES (%s, %s, %s)
-                        """, (Jsonb(name), informal_name, informal_description,))
+                        """, (Jsonb(name), informal_name, informal_description))
 
                 tasks.clear()
                 for row in batch:
@@ -97,7 +97,7 @@ def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int |
                         kind=kind,
                         header=header,
                         neighbor=neighbor,
-                        dependency=dependency
+                        dependency=dependency,
                     )
                     tasks.append(translate_and_insert(name, ti))
 
