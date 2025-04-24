@@ -138,7 +138,7 @@ def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
                 ON CONFLICT DO NOTHING
             """, values)
 
-            if s.value_references is not None:
+            if s.value_references is not None and s.kind != "theorem":
                 values = ({
                     "source": Jsonb(s.name),
                     "target": Jsonb(t),
