@@ -65,9 +65,9 @@ def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int |
                 async def translate_and_insert(name: LeanName, data: TranslationInput):
                     result = await env.translate(data)
                     if result is None:
-                        logger.warning(f"failed to translate {name}")
+                        logger.warning("failed to translate %s", name)
                     else:
-                        logger.info(f"translated {name}")
+                        logger.info("translated %s", name)
                         informal_name, informal_description = result
                         insert_cursor.execute("""
                             INSERT INTO informal (symbol_name, name, description)
@@ -78,7 +78,7 @@ def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int |
                 for row in batch:
                     name, signature, value, docstring, kind, header, module_name, index = row
 
-                    logger.info(f"translating {name}")
+                    logger.info("translating %s", name)
                     neighbor = find_neighbor(conn, module_name, index)
                     dependency = find_dependency(conn, name)
                     
