@@ -4,7 +4,7 @@ from psycopg import Connection
 def create_schema(conn: Connection):
     sql : list[LiteralString] = [
         """
-        CREATE TABLE IF NOT EXISTS module (
+        CREATE TABLE module (
             name JSONB PRIMARY KEY,
             content BYTEA NOT NULL,
             docstring TEXT
@@ -28,7 +28,7 @@ def create_schema(conn: Connection):
         """,
 
         """
-        CREATE TABLE IF NOT EXISTS symbol (
+        CREATE TABLE symbol (
             name JSONB PRIMARY KEY,
             module_name JSONB REFERENCES module(name) NOT NULL,
             type TEXT NOT NULL,
@@ -37,7 +37,7 @@ def create_schema(conn: Connection):
         """,
 
         """
-        CREATE TABLE IF NOT EXISTS declaration (
+        CREATE TABLE declaration (
             module_name JSONB REFERENCES module(name) NOT NULL,
             index INTEGER NOT NULL,
             name JSONB UNIQUE REFERENCES symbol(name),
@@ -51,7 +51,7 @@ def create_schema(conn: Connection):
         """,
 
         """
-        CREATE TABLE IF NOT EXISTS dependency (
+        CREATE TABLE dependency (
             source JSONB REFERENCES symbol(name) NOT NULL,
             target JSONB REFERENCES symbol(name) NOT NULL,
             on_type BOOLEAN NOT NULL,
@@ -60,14 +60,14 @@ def create_schema(conn: Connection):
         """,
 
         """
-        CREATE TABLE IF NOT EXISTS level (
+        CREATE TABLE level (
             symbol_name JSONB PRIMARY KEY REFERENCES symbol(name) NOT NULL,
             level INTEGER NOT NULL
         )
         """,
 
         """
-        CREATE TABLE IF NOT EXISTS informal (
+        CREATE TABLE informal (
             symbol_name JSONB PRIMARY KEY REFERENCES symbol(name) NOT NULL,
             name TEXT NOT NULL,
             description TEXT NOT NULL
@@ -75,7 +75,7 @@ def create_schema(conn: Connection):
         """,
 
         """
-        CREATE OR REPLACE VIEW record AS
+        CREATE VIEW record AS
         SELECT
             d.module_name, d.index, d.kind, d.name, d.signature, s.type, d.value, d.docstring,
             i.name AS informal_name, i.description AS informal_description
