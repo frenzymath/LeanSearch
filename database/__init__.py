@@ -8,11 +8,13 @@ from jixia.structs import parse_name
 from .informalize import generate_informal
 from .jixia_db import load_data
 from .vector_db import create_vector_db
-
+from .create_schema import create_schema
 
 def main():
     parser = ArgumentParser()
     subparser = parser.add_subparsers()
+    schema_parser = subparser.add_parser("schema")
+    schema_parser.set_defaults(command="schema")
     jixia_parser = subparser.add_parser("jixia")
     jixia_parser.set_defaults(command="jixia")
     jixia_parser.add_argument("project_root", help="Project to be indexed")
@@ -38,7 +40,9 @@ def main():
     args = parser.parse_args()
 
     with psycopg.connect(os.environ["CONNECTION_STRING"], autocommit=True) as conn:
-        if args.command == "jixia":
+        if args.command == "schema":
+            create_schema(conn)
+        elif args.command == "jixia":
             project = LeanProject(args.project_root)
             prefixes = [parse_name(p) for p in args.prefixes.split(",")]
             load_data(project, prefixes, conn)
