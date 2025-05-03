@@ -106,3 +106,6 @@ websocket-client==1.8.0
 websockets==15.0
 wrapt==1.17.2
 zipp==3.21.0
+
+# Development dependencies
+ruff==0.4.6

@@ -40,17 +40,16 @@ def find_dependency(conn: Connection, name: LeanName) -> list[TranslatedItem]:
 
 
 def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int | None = None, limit_num_per_level: int | None = None):
+    max_level : int
     if limit_level is None:
         with conn.cursor(row_factory=scalar_row) as cursor:
-            cursor.execute("""
-                SELECT MAX(level) FROM level
-            """)
-            limit_level = cursor.fetchone()
+            max_level = cursor.execute("SELECT MAX(level) FROM level").fetchone() or -1
+    else:
+        max_level = limit_level
 
     tasks = []
-
     with conn.cursor() as cursor, conn.cursor() as insert_cursor:
-        for l in range(limit_level + 1):
+        for level in range(max_level + 1):
             query = """
                 SELECT s.name, d.signature, d.value, d.docstring, d.kind, m.docstring, d.module_name, d.index
                 FROM
@@ -63,8 +62,9 @@ def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int |
                     (NOT EXISTS(SELECT 1 FROM informal i WHERE i.symbol_name = s.name))
             """
             if limit_num_per_level:
-                query += f" LIMIT {limit_num_per_level}"
-            cursor.execute(query, (l,))
+                cursor.execute(query + " LIMIT %s", (level, limit_num_per_level))
+            else:
+                cursor.execute(query, (level,))
 
             while batch := cursor.fetchmany(batch_size):
                 env = TranslationEnvironment(model=os.environ["OPENAI_MODEL"])
@@ -75,20 +75,31 @@ def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int |
                         logger.warning("failed to translate %s", name)
                     else:
                         logger.info("translated %s", name)
+                        informal_name, informal_description = result
                         insert_cursor.execute("""
                             INSERT INTO informal (symbol_name, name, description)
                             VALUES (%s, %s, %s)
-                        """, (Jsonb(name),) + result)
+                        """, (Jsonb(name), informal_name, informal_description))
 
                 tasks.clear()
                 for row in batch:
-                    basic, (module_name, index) = row[:-2], row[-2:]
-                    n = basic[0]
-                    logger.info("translating %s", n)
+                    name, signature, value, docstring, kind, header, module_name, index = row
+
+                    logger.info("translating %s", name)
                     neighbor = find_neighbor(conn, module_name, index)
-                    dependency = find_dependency(conn, n)
-                    ti = TranslationInput(*basic, neighbor, dependency)
-                    tasks.append(translate_and_insert(n, ti))
+                    dependency = find_dependency(conn, name)
+
+                    ti = TranslationInput(
+                        name=name,
+                        signature=signature,
+                        value=value,
+                        docstring=docstring,
+                        kind=kind,
+                        header=header,
+                        neighbor=neighbor,
+                        dependency=dependency,
+                    )
+                    tasks.append(translate_and_insert(name, ti))
 
                 async def wait_all():
                     await asyncio.gather(*tasks)
