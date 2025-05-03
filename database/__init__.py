@@ -10,6 +10,7 @@ from .jixia_db import load_data
 from .vector_db import create_vector_db
 from .create_schema import create_schema
 
+
 def main():
     parser = ArgumentParser()
     subparser = parser.add_subparsers()
@@ -26,11 +27,13 @@ def main():
     informal_parser.set_defaults(command="informal")
     informal_parser.add_argument("--batch-size", type=int, default=50)
     informal_parser.add_argument(
-        "--limit-level", type=int,
+        "--limit-level",
+        type=int,
         help="Limit max level. Used for testing.",
     )
     informal_parser.add_argument(
-        "--limit-num-per-level", type=int,
+        "--limit-num-per-level",
+        type=int,
         help="Limit max number of items per level. Used for testing.",
     )
     vector_db_parser = subparser.add_parser("vector-db")

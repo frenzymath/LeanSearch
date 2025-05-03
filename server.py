@@ -34,8 +34,8 @@ app.add_middleware(SlowAPIMiddleware)
 
 @app.post("/search")
 def search(
-        query: list[str],
-        num_results: Annotated[int, Body(gt=0, le=50)] = 10,
+    query: list[str],
+    num_results: Annotated[int, Body(gt=0, le=50)] = 10,
 ) -> list[list[QueryResult]]:
     return app.retriever.batch_search(query, num_results)
 

@@ -16,7 +16,7 @@ MAX_LENGTH = 4096
 
 
 def last_token_pool(last_hidden_states: Tensor, attention_mask: Tensor) -> Tensor:
-    left_padding = (attention_mask[:, -1].sum() == attention_mask.shape[0])
+    left_padding = attention_mask[:, -1].sum() == attention_mask.shape[0]
     if left_padding:
         return last_hidden_states[:, -1]
     else:
@@ -56,11 +56,11 @@ class MistralEmbedding:
                 batch_dict,
                 padding=True,
                 return_attention_mask=True,
-                return_tensors='pt',
+                return_tensors="pt",
             ).to(self.device)
             torch.cuda.empty_cache()
             outputs = self.model(**batch_dict)
-            embeddings = last_token_pool(outputs.last_hidden_state, batch_dict['attention_mask'])
+            embeddings = last_token_pool(outputs.last_hidden_state, batch_dict["attention_mask"])
             embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
             return embeddings.cpu().numpy().astype(np.float32).reshape(-1, DIMENSION).tolist()
 

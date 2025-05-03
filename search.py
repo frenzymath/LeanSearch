@@ -29,7 +29,7 @@ def main(query: list[str], num_results: int, json_output: bool):
                 print("---")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     dotenv.load_dotenv()
     parser = ArgumentParser()
     parser.add_argument("-n", "--num", type=int, help="Number of results per each query", default=5)

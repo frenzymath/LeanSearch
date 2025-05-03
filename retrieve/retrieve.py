@@ -41,10 +41,13 @@ class Retriever:
         ret = []
         with self.conn.cursor(row_factory=class_row(Record)) as cursor:
             for n in name:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT * FROM record
                     WHERE name = %s
-                """, (Jsonb(n),))
+                """,
+                    (Jsonb(n),),
+                )
                 ret.append(cursor.fetchone())
         return ret
 
@@ -62,10 +65,13 @@ class Retriever:
                 for doc_id, distance in zip(ids, distances):
                     module_name, _, index = doc_id.partition(":")
                     module_name = parse_name(module_name)
-                    cursor.execute("""
+                    cursor.execute(
+                        """
                         SELECT * FROM record
                         WHERE module_name = %s AND index = %s
-                    """, (Jsonb(module_name), index))
+                        """,
+                        (Jsonb(module_name), index),
+                    )
                     result = cursor.fetchone()
                     current_results.append(QueryResult(result=result, distance=distance))
                 ret.append(current_results)

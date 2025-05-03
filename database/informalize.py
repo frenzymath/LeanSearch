@@ -14,20 +14,24 @@ logger = logging.getLogger(__name__)
 
 def find_neighbor(conn: Connection, module_name: LeanName, index: int, num_neighbor: int = 2) -> list[TranslatedItem]:
     with conn.cursor(row_factory=args_row(TranslatedItem)) as cursor:
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT d.name, d.signature, i.name, i.description
             FROM
                 declaration d
                 LEFT JOIN informal i ON d.name = i.symbol_name
             WHERE
                 d.module_name = %s AND d.index >= %s AND d.index <= %s
-        """, (Jsonb(module_name), index - num_neighbor, index + num_neighbor))
+            """,
+            (Jsonb(module_name), index - num_neighbor, index + num_neighbor),
+        )
         return cursor.fetchall()
 
 
 def find_dependency(conn: Connection, name: LeanName) -> list[TranslatedItem]:
     with conn.cursor(row_factory=args_row(TranslatedItem)) as cursor:
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT d.name, d.signature, i.name, i.description
             FROM
                 declaration d
@@ -35,12 +39,14 @@ def find_dependency(conn: Connection, name: LeanName) -> list[TranslatedItem]:
                 LEFT JOIN informal i ON d.name = i.symbol_name
             WHERE
                 e.source = %s
-        """, (Jsonb(name),))
+            """,
+            (Jsonb(name),),
+        )
         return cursor.fetchall()
 
 
 def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int | None = None, limit_num_per_level: int | None = None):
-    max_level : int
+    max_level: int
     if limit_level is None:
         with conn.cursor(row_factory=scalar_row) as cursor:
             max_level = cursor.execute("SELECT MAX(level) FROM level").fetchone() or -1
@@ -76,10 +82,13 @@ def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int |
                     else:
                         logger.info("translated %s", name)
                         informal_name, informal_description = result
-                        insert_cursor.execute("""
+                        insert_cursor.execute(
+                            """
                             INSERT INTO informal (symbol_name, name, description)
                             VALUES (%s, %s, %s)
-                        """, (Jsonb(name), informal_name, informal_description))
+                            """,
+                            (Jsonb(name), informal_name, informal_description),
+                        )
 
                 tasks.clear()
                 for row in batch:

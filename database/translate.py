@@ -46,10 +46,7 @@ class TranslationEnvironment:
             undefined=jinja2.StrictUndefined,
         )
         self.env.filters["pp_name"] = pp_name
-        self.template = {
-            kind: self.env.get_template(f"{kind}.md.j2")
-            for kind in ["theorem", "definition", "instance"]
-        }
+        self.template = {kind: self.env.get_template(f"{kind}.md.j2") for kind in ["theorem", "definition", "instance"]}
         self.client = AsyncOpenAI()
         self.model = model
         self.pattern_name = re.compile(r"\*\*Informal name:?\*\*\s*(.*)")

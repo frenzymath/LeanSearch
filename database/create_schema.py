@@ -1,8 +1,9 @@
 from typing import LiteralString
 from psycopg import Connection
 
+
 def create_schema(conn: Connection):
-    sql : list[LiteralString] = [
+    sql: list[LiteralString] = [
         """
         CREATE TABLE module (
             name JSONB PRIMARY KEY,
@@ -10,7 +11,6 @@ def create_schema(conn: Connection):
             docstring TEXT
         )
         """,
-
         """
         CREATE TYPE declaration_kind AS ENUM (
             'abbrev',
@@ -26,7 +26,6 @@ def create_schema(conn: Connection):
             'proofWanted'
         )
         """,
-
         """
         CREATE TABLE symbol (
             name JSONB PRIMARY KEY,
@@ -35,7 +34,6 @@ def create_schema(conn: Connection):
             is_prop BOOLEAN NOT NULL
         )
         """,
-
         """
         CREATE TABLE declaration (
             module_name JSONB REFERENCES module(name) NOT NULL,
@@ -49,7 +47,6 @@ def create_schema(conn: Connection):
             PRIMARY KEY (module_name, index)
         )
         """,
-
         """
         CREATE TABLE dependency (
             source JSONB REFERENCES symbol(name) NOT NULL,
@@ -58,14 +55,12 @@ def create_schema(conn: Connection):
             PRIMARY KEY (source, target, on_type)
         )
         """,
-
         """
         CREATE TABLE level (
             symbol_name JSONB PRIMARY KEY REFERENCES symbol(name) NOT NULL,
             level INTEGER NOT NULL
         )
         """,
-
         """
         CREATE TABLE informal (
             symbol_name JSONB PRIMARY KEY REFERENCES symbol(name) NOT NULL,
@@ -73,7 +68,6 @@ def create_schema(conn: Connection):
             description TEXT NOT NULL
         )
         """,
-
         """
         CREATE VIEW record AS
         SELECT
