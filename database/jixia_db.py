@@ -2,109 +2,15 @@ import logging
 import os
 from collections.abc import Iterable
 from pathlib import Path
-from typing import LiteralString
 
 from jixia import LeanProject
 from jixia.structs import LeanName, Symbol, Declaration, is_internal
 from psycopg import Connection
-from psycopg.errors import DuplicateObject
 from psycopg.types.json import Jsonb
 
 logger = logging.getLogger(__name__)
 
-
 def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
-    def create_table():
-        sql: list[LiteralString] = [
-            """
-            CREATE TABLE IF NOT EXISTS module (
-                name JSONB PRIMARY KEY,
-                content BYTEA NOT NULL,
-                docstring TEXT
-            )
-            """,
-
-            """
-            CREATE TYPE declaration_kind AS ENUM (
-                'abbrev',
-                'axiom',
-                'classInductive',
-                'definition',
-                'example',
-                'inductive',
-                'instance',
-                'opaque',
-                'structure',
-                'theorem',
-                'proofWanted'
-            )
-            """,
-
-            """
-            CREATE TABLE IF NOT EXISTS symbol (
-                name JSONB PRIMARY KEY,
-                module_name JSONB REFERENCES module(name) NOT NULL,
-                type TEXT NOT NULL,
-                is_prop BOOLEAN NOT NULL
-            )
-            """,
-
-            """
-            CREATE TABLE IF NOT EXISTS declaration (
-                module_name JSONB REFERENCES module(name) NOT NULL,
-                index INTEGER NOT NULL,
-                name JSONB UNIQUE REFERENCES symbol(name),
-                visible BOOLEAN NOT NULL,
-                docstring TEXT,
-                kind declaration_kind NOT NULL,
-                signature TEXT NOT NULL,
-                value TEXT,
-                PRIMARY KEY (module_name, index)
-            )
-            """,
-
-            """
-            CREATE TABLE IF NOT EXISTS dependency (
-                source JSONB REFERENCES symbol(name) NOT NULL,
-                target JSONB REFERENCES symbol(name) NOT NULL,
-                on_type BOOLEAN NOT NULL,
-                PRIMARY KEY (source, target, on_type)
-            )
-            """,
-
-            """
-            CREATE TABLE IF NOT EXISTS level (
-                symbol_name JSONB PRIMARY KEY REFERENCES symbol(name) NOT NULL,
-                level INTEGER NOT NULL
-            )
-            """,
-
-            """
-            CREATE TABLE IF NOT EXISTS informal (
-                symbol_name JSONB PRIMARY KEY REFERENCES symbol(name) NOT NULL,
-                name TEXT NOT NULL,
-                description TEXT NOT NULL
-            )
-            """,
-
-            """
-            CREATE OR REPLACE VIEW record AS
-            SELECT
-                d.module_name, d.index, d.kind, d.name, d.signature, s.type, d.value, d.docstring,
-                i.name AS informal_name, i.description AS informal_description
-            FROM
-                declaration d
-                INNER JOIN informal i ON d.name = i.symbol_name
-                INNER JOIN symbol s ON d.name = s.name
-            """,
-        ]
-
-        for s in sql:
-            try:
-                cursor.execute(s)
-            except DuplicateObject:
-                pass
-
     def load_module(data: Iterable[LeanName], base_dir: Path):
         values = ((
             Jsonb(m),
@@ -194,7 +100,6 @@ def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
             """)
 
     with conn.cursor() as cursor:
-        create_table()
         lean_sysroot = Path(os.environ["LEAN_SYSROOT"])
         lean_src = lean_sysroot / "src" / "lean"
         all_modules = []
