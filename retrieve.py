@@ -45,7 +45,7 @@ class Retriever:
                     """
                     SELECT * FROM record
                     WHERE name = %s
-                """,
+                    """,
                     (Jsonb(n),),
                 )
                 ret.append(cursor.fetchone())

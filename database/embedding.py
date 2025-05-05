@@ -28,7 +28,7 @@ def last_token_pool(last_hidden_states: Tensor, attention_mask: Tensor) -> Tenso
 class MistralEmbedding:
     def __init__(self, device: str, instruction: str):
         self.device = torch.device(device)
-        logger.info(f"use device %s for embedding", self.device)
+        logger.info("use device %s for embedding", self.device)
         self.tokenizer = AutoTokenizer.from_pretrained("intfloat/e5-mistral-7b-instruct")
         self.model = AutoModel.from_pretrained(
             "intfloat/e5-mistral-7b-instruct",
