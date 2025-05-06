@@ -77,24 +77,25 @@ def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
             (Jsonb(module),),
         )
         (source,) = cursor.fetchone()
+
         values = (
-            (
-                Jsonb(module),
-                i,
-                Jsonb(d.name) if d.kind != "example" else None,
-                d.modifiers.visibility != "private" and d.kind != "example",
-                d.modifiers.docstring,
-                d.kind,
-                d.signature.pp if d.signature.pp is not None else source[d.signature.range.as_slice()].decode(),
-                source[d.value.range.as_slice()].decode() if d.value is not None else None,
-            )
+            {
+                "module_name": Jsonb(module),
+                "index"      : i,
+                "name"       : Jsonb(d.name) if d.kind != "example" else None,
+                "visible"    : d.modifiers.visibility != "private" and d.kind != "example",
+                "docstring"  : d.modifiers.docstring,
+                "kind"       : d.kind,
+                "signature"  : d.signature.pp if d.signature.pp is not None else source[d.signature.range.as_slice()].decode(),
+                "value"      : source[d.value.range.as_slice()].decode() if d.value is not None else None,
+            }
             for i, d in enumerate(declarations)
             if not is_internal(d.name) and d.kind != "proofWanted"
         )
         cursor.executemany(
             """
             INSERT INTO declaration (module_name, index, name, visible, docstring, kind, signature, value)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING 
+            VALUES (%(module_name)s, %(index)s, %(name)s, %(visible)s, %(docstring)s, %(kind)s, %(signature)s, %(value)s) ON CONFLICT DO NOTHING 
             """,
             values,
         )
