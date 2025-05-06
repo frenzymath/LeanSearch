@@ -90,14 +90,15 @@ def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
             (Jsonb(module_name),),
         )
         module = cursor.fetchone()
-        if (module is None):
+        if module is None:
             logger.warn("couldn't find a module with name '%s'", Jsonb(module_name))
             return
         (module_content,) = module
 
         db_declarations = []
         for index, decl in enumerate(declarations):
-            if is_internal(decl.name) or decl.kind == "proofWanted": continue
+            if is_internal(decl.name) or decl.kind == "proofWanted":
+                continue
             db_declarations.append({
                 "module_name": Jsonb(module_name),
                 "index"      : index,
@@ -106,7 +107,7 @@ def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
                 "docstring"  : decl.modifiers.docstring,
                 "kind"       : decl.kind,
                 "signature"  : _get_signature(decl, module_content),
-                "value"      : _get_value(decl, module_content)
+                "value"      : _get_value(decl, module_content),
             })
         cursor.executemany(
             """
