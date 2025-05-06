@@ -68,19 +68,23 @@ def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
                     values,
                 )
 
-    def load_declaration(module: LeanName):
-        declarations = project.load_info(module, Declaration)
+    def load_declaration(module_name: LeanName):
+        declarations = project.load_info(module_name, Declaration)
         cursor.execute(
             """
             SELECT content FROM module WHERE name = %s
             """,
-            (Jsonb(module),),
+            (Jsonb(module_name),),
         )
-        (source,) = cursor.fetchone()
+        module = cursor.fetchone()
+        if (module is None):
+            logger.warn("couldn't find a module with name '%s'", Jsonb(module_name))
+            return
+        (source,) = module
 
         values = (
             {
-                "module_name": Jsonb(module),
+                "module_name": Jsonb(module_name),
                 "index"      : i,
                 "name"       : Jsonb(d.name) if d.kind != "example" else None,
                 "visible"    : d.modifiers.visibility != "private" and d.kind != "example",
