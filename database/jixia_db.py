@@ -82,26 +82,26 @@ def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
             return
         (source,) = module
 
-        values = (
-            {
+        db_declarations = []
+        for index, decl in enumerate(declarations):
+            if is_internal(decl.name) or decl.kind == "proofWanted": continue
+            value = {
                 "module_name": Jsonb(module_name),
-                "index"      : i,
-                "name"       : Jsonb(d.name) if d.kind != "example" else None,
-                "visible"    : d.modifiers.visibility != "private" and d.kind != "example",
-                "docstring"  : d.modifiers.docstring,
-                "kind"       : d.kind,
-                "signature"  : d.signature.pp if d.signature.pp is not None else source[d.signature.range.as_slice()].decode(),
-                "value"      : source[d.value.range.as_slice()].decode() if d.value is not None else None,
+                "index"      : index,
+                "name"       : Jsonb(decl.name) if decl.kind != "example" else None,
+                "visible"    : decl.modifiers.visibility != "private" and decl.kind != "example",
+                "docstring"  : decl.modifiers.docstring,
+                "kind"       : decl.kind,
+                "signature"  : decl.signature.pp if decl.signature.pp is not None else source[decl.signature.range.as_slice()].decode(),
+                "value"      : source[decl.value.range.as_slice()].decode() if decl.value is not None else None,
             }
-            for i, d in enumerate(declarations)
-            if not is_internal(d.name) and d.kind != "proofWanted"
-        )
+            db_declarations.append(value)
         cursor.executemany(
             """
             INSERT INTO declaration (module_name, index, name, visible, docstring, kind, signature, value)
             VALUES (%(module_name)s, %(index)s, %(name)s, %(visible)s, %(docstring)s, %(kind)s, %(signature)s, %(value)s) ON CONFLICT DO NOTHING 
             """,
-            values,
+            db_declarations,
         )
 
     def topological_sort():
