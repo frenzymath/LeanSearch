@@ -10,6 +10,19 @@ from psycopg.types.json import Jsonb
 
 logger = logging.getLogger(__name__)
 
+def _get_signature(declaration: Declaration, module_content):
+    if declaration.signature.pp is not None:
+        return declaration.signature.pp
+    elif declaration.signature.range is not None:
+        return module_content[declaration.signature.range.as_slice()].decode()
+    else:
+        return ''
+
+def _get_value(declaration: Declaration, module_content):
+    if declaration.value is not None and declaration.value.range is not None:
+        return module_content[declaration.value.range.as_slice()].decode()
+    else:
+        return None
 
 def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
     def load_module(data: Iterable[LeanName], base_dir: Path):
@@ -80,22 +93,21 @@ def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
         if (module is None):
             logger.warn("couldn't find a module with name '%s'", Jsonb(module_name))
             return
-        (source,) = module
+        (module_content,) = module
 
         db_declarations = []
         for index, decl in enumerate(declarations):
             if is_internal(decl.name) or decl.kind == "proofWanted": continue
-            value = {
+            db_declarations.append({
                 "module_name": Jsonb(module_name),
                 "index"      : index,
                 "name"       : Jsonb(decl.name) if decl.kind != "example" else None,
                 "visible"    : decl.modifiers.visibility != "private" and decl.kind != "example",
                 "docstring"  : decl.modifiers.docstring,
                 "kind"       : decl.kind,
-                "signature"  : decl.signature.pp if decl.signature.pp is not None else source[decl.signature.range.as_slice()].decode(),
-                "value"      : source[decl.value.range.as_slice()].decode() if decl.value is not None else None,
-            }
-            db_declarations.append(value)
+                "signature"  : _get_signature(decl, module_content),
+                "value"      : _get_value(decl, module_content)
+            })
         cursor.executemany(
             """
             INSERT INTO declaration (module_name, index, name, visible, docstring, kind, signature, value)
