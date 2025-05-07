@@ -140,19 +140,23 @@ def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
             """)
 
     with conn.cursor() as cursor:
-        lean_sysroot = Path(os.environ["LEAN_SYSROOT"])
-        lean_src = lean_sysroot / "src" / "lean"
-        all_modules = []
-        for d in project.root, lean_src:
-            results = project.batch_run_jixia(
-                base_dir=d,
-                prefixes=prefixes,
-                plugins=["module", "declaration", "symbol"],
-            )
-            modules = [r[0] for r in results]
-            load_module(modules, d)
-            all_modules += modules
+        path_to_project = project.root
+        project_modules = [r[0] for r in project.batch_run_jixia(
+            base_dir=path_to_project,
+            prefixes=prefixes,
+            plugins=["module", "declaration", "symbol"],
+        )]
+        load_module(project_modules, path_to_project)
 
+        path_to_lean = Path(os.environ["LEAN_SYSROOT"]) / "src" / "lean"
+        lean_modules = [r[0] for r in project.batch_run_jixia(
+            base_dir=path_to_lean,
+            prefixes=prefixes,
+            plugins=["module", "declaration", "symbol"],
+        )]
+        load_module(lean_modules, path_to_lean)
+
+        all_modules = lean_modules + project_modules
         for m in all_modules:
             load_symbol(m)
         for m in all_modules:
