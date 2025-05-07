@@ -25,14 +25,19 @@ def _get_value(declaration: Declaration, module_content):
         return None
 
 def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
-    def load_module(data: Iterable[LeanName], base_dir: Path):
-        values = ((Jsonb(m), project.path_of_module(m, base_dir).read_bytes(), project.load_module_info(m).docstring) for m in data)
-        cursor.executemany(
-            """
-            INSERT INTO module (name, content, docstring) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING
-            """,
-            values,
-        )
+    def load_module(module_names: Iterable[LeanName], base_dir: Path):
+        for module_name in module_names:
+            db_module = {
+                "name": Jsonb(module_name),
+                "content": project.path_of_module(module_name, base_dir).read_bytes(),
+                "docstring": project.load_module_info(module_name).docstring
+            }
+            cursor.execute(
+                """
+                INSERT INTO module (name, content, docstring) VALUES (%(name)s, %(content)s, %(docstring)s) ON CONFLICT DO NOTHING
+                """,
+                db_module
+            )
 
     def load_symbol(module: LeanName):
         symbols = [s for s in project.load_info(module, Symbol) if not is_internal(s.name)]
