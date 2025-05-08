@@ -27,43 +27,40 @@ def create_schema(conn: Connection):
         )
         """,
         """
-        CREATE TABLE symbol (
-            name JSONB PRIMARY KEY,
-            module_name JSONB REFERENCES module(name) NOT NULL,
-            type TEXT NOT NULL,
-            is_prop BOOLEAN NOT NULL
-        )
-        """,
-        """
         CREATE TABLE declaration (
             module_name JSONB REFERENCES module(name) NOT NULL,
+            name JSONB,
+
             index INTEGER NOT NULL,
-            name JSONB UNIQUE REFERENCES symbol(name),
             visible BOOLEAN NOT NULL,
             docstring TEXT,
             kind declaration_kind NOT NULL,
             signature TEXT NOT NULL,
             value TEXT,
-            PRIMARY KEY (module_name, index)
+
+            symbol_type TEXT NOT NULL,
+            symbol_is_prop BOOLEAN NOT NULL,
+
+            PRIMARY KEY (name)
         )
         """,
         """
         CREATE TABLE dependency (
-            source JSONB REFERENCES symbol(name) NOT NULL,
-            target JSONB REFERENCES symbol(name) NOT NULL,
+            source JSONB NOT NULL,
+            target JSONB NOT NULL,
             on_type BOOLEAN NOT NULL,
             PRIMARY KEY (source, target, on_type)
         )
         """,
         """
         CREATE TABLE level (
-            symbol_name JSONB PRIMARY KEY REFERENCES symbol(name) NOT NULL,
+            symbol_name JSONB PRIMARY KEY REFERENCES declaration(name) NOT NULL,
             level INTEGER NOT NULL
         )
         """,
         """
         CREATE TABLE informal (
-            symbol_name JSONB PRIMARY KEY REFERENCES symbol(name) NOT NULL,
+            symbol_name JSONB PRIMARY KEY REFERENCES declaration(name) NOT NULL,
             name TEXT NOT NULL,
             description TEXT NOT NULL
         )
@@ -71,12 +68,11 @@ def create_schema(conn: Connection):
         """
         CREATE VIEW record AS
         SELECT
-            d.module_name, d.index, d.kind, d.name, d.signature, s.type, d.value, d.docstring,
+            d.module_name, d.index, d.kind, d.name, d.signature, d.symbol_type, d.value, d.docstring,
             i.name AS informal_name, i.description AS informal_description
         FROM
             declaration d
             INNER JOIN informal i ON d.name = i.symbol_name
-            INNER JOIN symbol s ON d.name = s.name
         """,
     ]
 
