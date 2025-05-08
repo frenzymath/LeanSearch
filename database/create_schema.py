@@ -41,6 +41,9 @@ def create_schema(conn: Connection):
             symbol_type TEXT NOT NULL,
             symbol_is_prop BOOLEAN NOT NULL,
 
+            informal_name TEXT,
+            informal_description TEXT,
+
             PRIMARY KEY (name)
         )
         """,
@@ -57,23 +60,7 @@ def create_schema(conn: Connection):
             symbol_name JSONB PRIMARY KEY REFERENCES declaration(name) NOT NULL,
             level INTEGER NOT NULL
         )
-        """,
         """
-        CREATE TABLE informal (
-            symbol_name JSONB PRIMARY KEY REFERENCES declaration(name) NOT NULL,
-            name TEXT NOT NULL,
-            description TEXT NOT NULL
-        )
-        """,
-        """
-        CREATE VIEW record AS
-        SELECT
-            d.module_name, d.index, d.kind, d.name, d.signature, d.symbol_type, d.value, d.docstring,
-            i.name AS informal_name, i.description AS informal_description
-        FROM
-            declaration d
-            INNER JOIN informal i ON d.name = i.symbol_name
-        """,
     ]
 
     with conn.cursor() as cursor:
