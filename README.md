@@ -60,6 +60,8 @@ python -m pip install -r requirements.txt
     - `project root`: Path to the project to index. This is where the `lakefile.toml` or `lakefile.lean` is located.
     - `prefixes`: Comma-separated list of module prefixes. A module is indexed only if its module path starts with one of prefixes listed here.  For example, `Init,Lean,Mathlib` will include only `Init.*`, `Lean.*`, and `Mathlib.*` modules.
 
+    Note: to check what modules are available in your project, and to determine how prefixes work, you can use `python -m prefix --project_root <project_root> --prefixes <prefixes>` helper command.
+
 3. **Create informal descriptions** (uses DeepSeek api, puts results into PostgreSQL)
 
    ```shell
