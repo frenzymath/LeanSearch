@@ -24,10 +24,9 @@ def create_vector_db(conn: Connection, path: str, batch_size: int):
 
     with conn.cursor() as cursor:
         cursor.execute("""
-            SELECT d.module_name, d.index, d.kind, d.name, d.signature, i.name, i.description
-            FROM
-                declaration d INNER JOIN informal i ON d.name = i.symbol_name
-            WHERE d.visible = TRUE
+            SELECT module_name, index, kind, name, signature, informal_name, informal_description
+            FROM declaration
+            WHERE visible = TRUE
         """)
 
         while batch := cursor.fetchmany(batch_size):
