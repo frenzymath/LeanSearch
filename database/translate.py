@@ -61,6 +61,9 @@ class TranslationEnvironment:
         else:
             kind = "definition" if data.value_matters else "theorem"
         prompt = await self.template[kind].render_async(input=data)
+        if os.environ["DRY_RUN"] == "true":
+            logger.info("DRY_RUN:skipped informalization: %s", data.name)
+            return "Fake Name", f"Fake Description\nPrompt:\n{data}"
         for _ in range(5):
             try:
                 response = await self.client.chat.completions.create(
