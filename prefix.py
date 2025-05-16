@@ -5,23 +5,28 @@ import dotenv
 from jixia import LeanProject
 from jixia.structs import parse_name, is_prefix_of, LeanName
 
+def format(lean_name: LeanName, with_indent: bool = False) -> str:
+    formatted = '.'.join(str(x) for x in lean_name)
+    indent = '  ' * (len(lean_name) - 1) if with_indent else ''
+    return f"{indent}{formatted}"
+
+def sort(lean_names: list[LeanName]) -> list[LeanName]:
+    return sorted(lean_names, key=format)
+
 def main(project_root: str, prefixes: str | None) -> None:
     project = LeanProject(project_root)
-    all_modules = project.find_modules()
+    all_module_names : list[LeanName] = project.find_modules()
 
     print("____________ALL MODULES_____________")
-    formatted_modules = ['.'.join(str(x) for x in module) for module in all_modules]
-    for module in formatted_modules:
-        print(module)
+    for module_name in sort(all_module_names):
+        print(format(module_name, with_indent=True))
 
     if prefixes is not None:
         print("__________MODULES THAT MATCH YOUR PREFIX___________")
-        lean_names : list[LeanName] = [parse_name(p) for p in prefixes.split(",")]
-        matching_modules = [m for m in all_modules if any(is_prefix_of(p, m) for p in lean_names)]
-        # Format the matching modules with slashes
-        formatted_matching = ['.'.join(str(x) for x in module) for module in matching_modules]
-        for module in formatted_matching:
-            print(module)
+        prefix_names : list[LeanName] = [parse_name(p) for p in prefixes.split(",")]
+        matching_names = [n for n in all_module_names if any(is_prefix_of(p, n) for p in prefix_names)]
+        for module_name in sort(matching_names):
+            print(format(module_name))
 
 if __name__ == "__main__":
     dotenv.load_dotenv()
