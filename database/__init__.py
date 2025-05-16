@@ -9,6 +9,7 @@ from .informalize import generate_informal
 from .jixia_db import load_data
 from .vector_db import create_vector_db
 from .create_schema import create_schema
+from .migrate import migrate
 
 
 def main():
@@ -43,6 +44,8 @@ def main():
     args = parser.parse_args()
 
     with psycopg.connect(os.environ["CONNECTION_STRING"], autocommit=True) as conn:
+        if args.command == "migrate":
+            migrate(conn)
         if args.command == "schema":
             create_schema(conn)
         elif args.command == "jixia":
