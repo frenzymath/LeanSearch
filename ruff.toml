@@ -37,8 +37,14 @@ target-version = "py39"
 
 [lint]
 # Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
-# Note the formatter takes care of trailing commas
-select = ["E4", "E7", "E9", "F", "W292"]
+select = ["E4", "E7", "E9", "F",
+    # missing-newline-at-end-of-file
+    "W292",
+    # trailing commas
+    "COM812", "COM819",
+    # use double quotes
+    "Q000"
+]
 ignore = []
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
@@ -47,16 +53,3 @@ unfixable = []
 
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-
-[format]
-# Like Black, use double quotes for strings.
-quote-style = "double"
-
-# Like Black, indent with spaces, rather than tabs.
-indent-style = "space"
-
-# Like Black, respect magic trailing commas.
-skip-magic-trailing-comma = false
-
-# Like Black, automatically detect the appropriate line ending.
-line-ending = "auto"
