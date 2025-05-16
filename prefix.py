@@ -10,7 +10,7 @@ def main(project_root: str, prefixes: str | None) -> None:
     all_modules = project.find_modules()
 
     print("____________ALL MODULES_____________")
-    formatted_modules = ['/'.join(str(x) for x in module) for module in all_modules]
+    formatted_modules = ['.'.join(str(x) for x in module) for module in all_modules]
     for module in formatted_modules:
         print(module)
 
@@ -19,7 +19,7 @@ def main(project_root: str, prefixes: str | None) -> None:
         lean_names : list[LeanName] = [parse_name(p) for p in prefixes.split(",")]
         matching_modules = [m for m in all_modules if any(is_prefix_of(p, m) for p in lean_names)]
         # Format the matching modules with slashes
-        formatted_matching = ['/'.join(str(x) for x in module) for module in matching_modules]
+        formatted_matching = ['.'.join(str(x) for x in module) for module in matching_modules]
         for module in formatted_matching:
             print(module)
 
