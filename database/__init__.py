@@ -38,7 +38,6 @@ def main():
         type=int,
         help="Limit max number of items per level. Used for testing.",
     )
-    informal_parser.add_argument("--project-name")
     vector_db_parser = subparser.add_parser("vector-db")
     vector_db_parser.set_defaults(command="vector-db")
     vector_db_parser.add_argument("--batch-size", type=int, default=8)
@@ -58,7 +57,6 @@ def main():
         elif args.command == "informal":
             generate_informal(
                 conn,
-                project_name=args.project_name,
                 batch_size=args.batch_size,
                 limit_level=args.limit_level,
                 limit_num_per_level=args.limit_num_per_level,

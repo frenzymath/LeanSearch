@@ -51,7 +51,7 @@ def find_dependency(conn: Connection, name: LeanName) -> list[TranslatedItem]:
         return cursor.fetchall()
 
 
-def generate_informal(conn: Connection, project_name: str, batch_size: int = 50, limit_level: int | None = None, limit_num_per_level: int | None = None):
+def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int | None = None, limit_num_per_level: int | None = None):
     max_level: int
     if limit_level is None:
         with conn.cursor(row_factory=scalar_row) as cursor:
@@ -63,7 +63,7 @@ def generate_informal(conn: Connection, project_name: str, batch_size: int = 50,
     with conn.cursor() as cursor, conn.cursor() as insert_cursor:
         for level in range(max_level + 1):
             query = """
-                SELECT s.name, d.signature, d.value, d.docstring, d.kind, m.docstring, d.module_name, d.index
+                SELECT s.name, d.signature, d.value, d.docstring, d.kind, m.docstring, d.module_name, d.index, m.project_name
                 FROM
                     symbol s
                     INNER JOIN declaration d ON s.name = d.name
@@ -98,7 +98,7 @@ def generate_informal(conn: Connection, project_name: str, batch_size: int = 50,
 
                 tasks.clear()
                 for row in batch:
-                    name, signature, value, docstring, kind, header, module_name, index = row
+                    name, signature, value, docstring, kind, header, module_name, index, project_name = row
 
                     logger.info("translating %s", name)
                     neighbor = find_neighbor(conn, module_name, index)
