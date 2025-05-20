@@ -24,6 +24,7 @@ def main():
         "prefixes",
         help="Comma-separated list of module prefixes to be included in the index; e.g., Init,Mathlib",
     )
+    jixia_parser.add_argument("--project-name")
     informal_parser = subparser.add_parser("informal")
     informal_parser.set_defaults(command="informal")
     informal_parser.add_argument("--batch-size", type=int, default=50)
@@ -37,9 +38,11 @@ def main():
         type=int,
         help="Limit max number of items per level. Used for testing.",
     )
+    informal_parser.add_argument("--project-name")
     vector_db_parser = subparser.add_parser("vector-db")
     vector_db_parser.set_defaults(command="vector-db")
     vector_db_parser.add_argument("--batch-size", type=int, default=8)
+    vector_db_parser.add_argument("--project-name")
 
     args = parser.parse_args()
 
@@ -51,13 +54,14 @@ def main():
         elif args.command == "jixia":
             project = LeanProject(args.project_root)
             prefixes = [parse_name(p) for p in args.prefixes.split(",")]
-            load_data(project, prefixes, conn)
+            load_data(project, prefixes, conn, project_name=args.project_name)
         elif args.command == "informal":
             generate_informal(
                 conn,
+                project_name=args.project_name,
                 batch_size=args.batch_size,
                 limit_level=args.limit_level,
                 limit_num_per_level=args.limit_num_per_level,
             )
         elif args.command == "vector-db":
-            create_vector_db(conn, os.environ["CHROMA_PATH"], batch_size=args.batch_size)
+            create_vector_db(conn, os.environ["CHROMA_PATH"], batch_size=args.batch_size, project_name=args.project_name)

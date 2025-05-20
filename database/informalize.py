@@ -51,7 +51,7 @@ def find_dependency(conn: Connection, name: LeanName) -> list[TranslatedItem]:
         return cursor.fetchall()
 
 
-def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int | None = None, limit_num_per_level: int | None = None):
+def generate_informal(conn: Connection, project_name: str, batch_size: int = 50, limit_level: int | None = None, limit_num_per_level: int | None = None):
     max_level: int
     if limit_level is None:
         with conn.cursor(row_factory=scalar_row) as cursor:
@@ -113,6 +113,7 @@ def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int |
                         header=header,
                         neighbor=neighbor,
                         dependency=dependency,
+                        project_name=project_name,
                     )
                     tasks.append(translate_and_insert(name, ti))
 
