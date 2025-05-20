@@ -4,11 +4,13 @@ import os
 import re
 from dataclasses import dataclass
 from json import JSONDecodeError
+import xml.etree.ElementTree as ET
 
 import jinja2
 from jinja2 import Environment, FileSystemLoader
 from jixia.structs import DeclarationKind, LeanName, pp_name
 from openai import AsyncOpenAI
+from prompt.metaprogramming import metaprogramming_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -16,10 +18,16 @@ logger = logging.getLogger(__name__)
 @dataclass
 class TranslatedItem:
     name: LeanName
-    description: str
+    signature: str
+    value: str | None
+    docstring: str | None
+    kind: DeclarationKind
+
     informal_name: str | None
     informal_description: str | None
 
+    # The "description" field is a copypaste of the more appropriately named "signature" field, it's here for backwards compatibility, and can be removed when all prompts are switch to using the "signature" field.
+    description: str
 
 @dataclass
 class TranslationInput:
