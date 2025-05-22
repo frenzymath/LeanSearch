@@ -24,12 +24,12 @@ def _get_value(declaration: Declaration, module_content):
     else:
         return None
 
-def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
+def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection, project_name):
     def load_module(data: Iterable[LeanName], base_dir: Path):
-        values = ((Jsonb(m), project.path_of_module(m, base_dir).read_bytes(), project.load_module_info(m).docstring) for m in data)
+        values = ((Jsonb(m), project.path_of_module(m, base_dir).read_bytes(), project.load_module_info(m).docstring, project_name) for m in data)
         cursor.executemany(
             """
-            INSERT INTO module (name, content, docstring) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING
+            INSERT INTO module (name, content, docstring, project_name) VALUES (%s, %s, %s, %s) ON CONFLICT DO NOTHING
             """,
             values,
         )

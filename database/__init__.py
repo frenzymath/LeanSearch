@@ -9,6 +9,7 @@ from .informalize import generate_informal
 from .jixia_db import load_data
 from .vector_db import create_vector_db
 from .create_schema import create_schema
+from .migrate import migrate
 
 
 def main():
@@ -23,6 +24,7 @@ def main():
         "prefixes",
         help="Comma-separated list of module prefixes to be included in the index; e.g., Init,Mathlib",
     )
+    jixia_parser.add_argument("--project-name")
     informal_parser = subparser.add_parser("informal")
     informal_parser.set_defaults(command="informal")
     informal_parser.add_argument("--batch-size", type=int, default=50)
@@ -39,16 +41,19 @@ def main():
     vector_db_parser = subparser.add_parser("vector-db")
     vector_db_parser.set_defaults(command="vector-db")
     vector_db_parser.add_argument("--batch-size", type=int, default=8)
+    vector_db_parser.add_argument("--project-name")
 
     args = parser.parse_args()
 
     with psycopg.connect(os.environ["CONNECTION_STRING"], autocommit=True) as conn:
+        if args.command == "migrate":
+            migrate(conn)
         if args.command == "schema":
             create_schema(conn)
         elif args.command == "jixia":
             project = LeanProject(args.project_root)
             prefixes = [parse_name(p) for p in args.prefixes.split(",")]
-            load_data(project, prefixes, conn)
+            load_data(project, prefixes, conn, project_name=args.project_name)
         elif args.command == "informal":
             generate_informal(
                 conn,
@@ -57,4 +62,4 @@ def main():
                 limit_num_per_level=args.limit_num_per_level,
             )
         elif args.command == "vector-db":
-            create_vector_db(conn, os.environ["CHROMA_PATH"], batch_size=args.batch_size)
+            create_vector_db(conn, os.environ["CHROMA_PATH"], batch_size=args.batch_size, project_name=args.project_name)
