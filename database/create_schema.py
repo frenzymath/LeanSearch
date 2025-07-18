@@ -78,6 +78,21 @@ def create_schema(conn: Connection):
             INNER JOIN informal i ON d.name = i.symbol_name
             INNER JOIN symbol s ON d.name = s.name
         """,
+
+        """
+        CREATE TABLE leansearch.query (
+            id UUID PRIMARY KEY,
+            query TEXT NOT NULL,
+            time TIMESTAMP NOT NULL
+        )
+        """,
+        """
+        CREATE TABLE leansearch.feedback (
+            query_id UUID REFERENCES leansearch.query(id) NOT NULL,
+            declaration_name JSONB REFERENCES declaration(name) NOT NULL,
+            action TEXT NOT NULL,
+            PRIMARY KEY (query_id, declaration_name)
+        )"""
     ]
 
     with conn.cursor() as cursor:
