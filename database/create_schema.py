@@ -80,6 +80,10 @@ def create_schema(conn: Connection):
         """,
 
         """
+        CREATE SCHEMA leansearch
+        """,
+
+        """
         CREATE TABLE leansearch.query (
             id UUID PRIMARY KEY,
             query TEXT NOT NULL,
