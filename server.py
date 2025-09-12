@@ -34,30 +34,39 @@ limiter = Limiter(key_func=get_remote_address, default_limits=["1/second"])
 app = FastAPI(lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+@app.middleware("http")
+async def check_connection(request: Request, call_next):
+    if app.conn.closed:
+        app.conn = psycopg.connect(os.environ["CONNECTION_STRING"], autocommit=True)
+    return await call_next(request)
+
+
 app.add_middleware(SlowAPIMiddleware)
 
 
 @app.post("/search")
 def search(
-    response: Response,
-    query: list[str],
-    num_results: Annotated[int, Body(gt=0, le=50)] = 10,
+        response: Response,
+        query: list[str],
+        num_results: Annotated[int, Body(gt=0, le=150)] = 10,
 ) -> list[list[QueryResult]]:
     if len(query) == 1:
         with app.conn.cursor(row_factory=scalar_row) as cursor:
             cursor.execute("""
-                INSERT INTO leansearch.query(id, query, time)
-                VALUES (GEN_RANDOM_UUID(), %s, NOW())
-                RETURNING id
-            """, (query[0],))
+                           INSERT INTO leansearch.query(id, query, time)
+                           VALUES (GEN_RANDOM_UUID(), %s, NOW())
+                           RETURNING id
+                           """, (query[0],))
             session_id = cursor.fetchone()
             response.set_cookie("session", str(session_id))
     else:
         with app.conn.cursor() as cursor:
             cursor.executemany("""
-                INSERT INTO leansearch.query(id, query, time)
-                VALUES (GEN_RANDOM_UUID(), %s, NOW())
-            """, [(q,) for q in query])
+                               INSERT INTO leansearch.query(id, query, time)
+                               VALUES (GEN_RANDOM_UUID(), %s, NOW())
+                               """, [(q,) for q in query])
 
     return app.retriever.batch_search(query, num_results)
 
