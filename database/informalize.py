@@ -16,9 +16,12 @@ def find_neighbor(conn: Connection, module_name: LeanName, index: int, num_neigh
     with conn.cursor(row_factory=args_row(TranslatedItem)) as cursor:
         cursor.execute(
             """
-            SELECT d.name, d.signature, i.name, i.description
+            SELECT s.name, d.signature, d.value, d.docstring, d.kind, i.name, i.description, d.signature
             FROM
-                declaration d
+                symbol s
+                INNER JOIN declaration d ON s.name = d.name
+                INNER JOIN module m ON s.module_name = m.name
+                INNER JOIN level l ON s.name = l.symbol_name
                 LEFT JOIN informal i ON d.name = i.symbol_name
             WHERE
                 d.module_name = %s AND d.index >= %s AND d.index <= %s
@@ -32,11 +35,14 @@ def find_dependency(conn: Connection, name: LeanName) -> list[TranslatedItem]:
     with conn.cursor(row_factory=args_row(TranslatedItem)) as cursor:
         cursor.execute(
             """
-            SELECT d.name, d.signature, i.name, i.description
+            SELECT s.name, d.signature, d.value, d.docstring, d.kind, i.name, i.description, d.signature
             FROM
-                declaration d
-                INNER JOIN dependency e ON d.name = e.target
+                symbol s
+                INNER JOIN declaration d ON s.name = d.name
+                INNER JOIN module m ON s.module_name = m.name
+                INNER JOIN level l ON s.name = l.symbol_name
                 LEFT JOIN informal i ON d.name = i.symbol_name
+                INNER JOIN dependency e ON d.name = e.target
             WHERE
                 e.source = %s
             """,
@@ -57,7 +63,7 @@ def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int |
     with conn.cursor() as cursor, conn.cursor() as insert_cursor:
         for level in range(max_level + 1):
             query = """
-                SELECT s.name, d.signature, d.value, d.docstring, d.kind, m.docstring, d.module_name, d.index
+                SELECT s.name, d.signature, d.value, d.docstring, d.kind, m.docstring, d.module_name, d.index, m.project_name
                 FROM
                     symbol s
                     INNER JOIN declaration d ON s.name = d.name
@@ -92,7 +98,7 @@ def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int |
 
                 tasks.clear()
                 for row in batch:
-                    name, signature, value, docstring, kind, header, module_name, index = row
+                    name, signature, value, docstring, kind, header, module_name, index, project_name = row
 
                     logger.info("translating %s", name)
                     neighbor = find_neighbor(conn, module_name, index)
@@ -107,6 +113,7 @@ def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int |
                         header=header,
                         neighbor=neighbor,
                         dependency=dependency,
+                        project_name=project_name,
                     )
                     tasks.append(translate_and_insert(name, ti))
 
