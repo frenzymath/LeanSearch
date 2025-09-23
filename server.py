@@ -26,7 +26,6 @@ async def lifespan(app: FastAPI):
     with psycopg.connect(os.environ["CONNECTION_STRING"], autocommit=True) as conn:
         app.augmentor = Augmentor(os.environ["OPENAI_MODEL"])
         app.retriever = Retriever(os.environ["CHROMA_PATH"], conn)
-        app.conn = conn
         yield
 
 
@@ -38,8 +37,8 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 @app.middleware("http")
 async def check_connection(request: Request, call_next):
-    if app.conn.closed:
-        app.conn = psycopg.connect(os.environ["CONNECTION_STRING"], autocommit=True)
+    if app.retriever.conn.closed:
+        app.retriever.conn = psycopg.connect(os.environ["CONNECTION_STRING"], autocommit=True)
     return await call_next(request)
 
 
@@ -53,7 +52,7 @@ def search(
         num_results: Annotated[int, Body(gt=0, le=150)] = 10,
 ) -> list[list[QueryResult]]:
     if len(query) == 1:
-        with app.conn.cursor(row_factory=scalar_row) as cursor:
+        with app.retriever.conn.cursor(row_factory=scalar_row) as cursor:
             cursor.execute("""
                            INSERT INTO leansearch.query(id, query, time)
                            VALUES (GEN_RANDOM_UUID(), %s, NOW())
@@ -62,7 +61,7 @@ def search(
             session_id = cursor.fetchone()
             response.set_cookie("session", str(session_id))
     else:
-        with app.conn.cursor() as cursor:
+        with app.retriever.conn.cursor() as cursor:
             cursor.executemany("""
                                INSERT INTO leansearch.query(id, query, time)
                                VALUES (GEN_RANDOM_UUID(), %s, NOW())
@@ -93,13 +92,13 @@ class Feedback(BaseModel):
 async def feedback(session: Annotated[str, Cookie()], body: Feedback):
     query_id = uuid.UUID(session)
     if body.cancel:
-        with app.conn.cursor() as cursor:
+        with app.retriever.conn.cursor() as cursor:
             cursor.execute(
                 "DELETE FROM leansearch.feedback WHERE query_id = %s AND declaration_name = %s",
                 (query_id, Jsonb(body.declaration))
             )
     else:
-        with app.conn.cursor() as cursor:
+        with app.retriever.conn.cursor() as cursor:
             cursor.execute(
                 "INSERT INTO leansearch.feedback(query_id, declaration_name, action) VALUES (%s, %s, %s)",
                 (query_id, Jsonb(body.declaration), body.action)
