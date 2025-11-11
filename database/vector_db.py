@@ -24,19 +24,23 @@ def create_vector_db(conn: Connection, path: str, batch_size: int):
 
     with conn.cursor() as cursor:
         cursor.execute("""
-            SELECT d.module_name, d.index, d.kind, d.name, d.signature, i.name, i.description
+            SELECT s.name, d.module_name, d.index, s.kind, d.signature, s.type, i.name, i.description
             FROM
-                declaration d INNER JOIN informal i ON d.name = i.symbol_name
+                symbol s
+                LEFT JOIN declaration d ON s.name = d.name
+                INNER JOIN informal i ON s.name = i.symbol_name
             WHERE d.visible = TRUE
         """)
 
         while batch := cursor.fetchmany(batch_size):
             batch_doc = []
             batch_id = []
-            for module_name, index, kind, name, signature, informal_name, informal_description in batch:
+            for name, module_name, index, kind, signature, tp, informal_name, informal_description in batch:
+                if signature is None:
+                    signature = tp
                 batch_doc.append(f"{kind} {name} {signature}\n{informal_name}: {informal_description}")
-                # NOTE: we use module name + index as document id as they cannot contain special characters
-                batch_id.append(f"{pp_name(module_name)}:{index}")
+                # NOTE: the space character is not used in names from mathlib and its dependencies
+                batch_id.append(" ".join(str(x) for x in name))
                 if os.environ["DRY_RUN"] == "true":
                     logger.info("DRY_RUN:skipped embedding: %s", f"{kind} {name} {signature} {informal_name}")
             if os.environ["DRY_RUN"] == "true":

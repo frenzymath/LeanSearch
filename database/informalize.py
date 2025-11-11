@@ -57,10 +57,10 @@ def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int |
     with conn.cursor() as cursor, conn.cursor() as insert_cursor:
         for level in range(max_level + 1):
             query = """
-                SELECT s.name, d.signature, d.value, d.docstring, d.kind, m.docstring, d.module_name, d.index
+                SELECT s.name, s.kind, s.type, d.signature, d.value, d.docstring, m.docstring, d.module_name, d.index
                 FROM
                     symbol s
-                    INNER JOIN declaration d ON s.name = d.name
+                    LEFT JOIN declaration d ON s.name = d.name
                     INNER JOIN module m ON s.module_name = m.name
                     INNER JOIN level l ON s.name = l.symbol_name
                 WHERE
@@ -92,10 +92,13 @@ def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int |
 
                 tasks.clear()
                 for row in batch:
-                    name, signature, value, docstring, kind, header, module_name, index = row
+                    name, kind, tp, signature, value, docstring, header, module_name, index = row
 
                     logger.info("translating %s", name)
-                    neighbor = find_neighbor(conn, module_name, index)
+                    if module_name is not None:
+                        neighbor = find_neighbor(conn, module_name, index)
+                    else:
+                        neighbor = []
                     dependency = find_dependency(conn, name)
 
                     ti = TranslationInput(

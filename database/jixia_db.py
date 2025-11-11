@@ -36,10 +36,10 @@ def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
 
     def load_symbol(module: LeanName):
         symbols = [s for s in project.load_info(module, Symbol) if not is_internal(s.name)]
-        values = ((Jsonb(s.name), Jsonb(module), s.type, s.is_prop) for s in symbols)
+        values = ((Jsonb(s.name), Jsonb(module), s.kind, s.type, s.is_prop) for s in symbols)
         cursor.executemany(
             """
-            INSERT INTO symbol (name, module_name, type, is_prop) VALUES (%s, %s, %s, %s) ON CONFLICT DO NOTHING
+            INSERT INTO symbol (name, module_name, kind, type, is_prop) VALUES (%s, %s, %s, %s, %s) ON CONFLICT DO NOTHING
             """,
             values,
         )
@@ -108,11 +108,15 @@ def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
                 "kind"       : decl.kind,
                 "signature"  : _get_signature(decl, module_content),
                 "value"      : _get_value(decl, module_content),
+                "start"      : decl.ref.range.start if decl.ref.range is not None else None,
+                "stop"       : decl.ref.range.stop if decl.ref.range is not None else None,
             })
         cursor.executemany(
             """
             INSERT INTO declaration (module_name, index, name, visible, docstring, kind, signature, value)
-            VALUES (%(module_name)s, %(index)s, %(name)s, %(visible)s, %(docstring)s, %(kind)s, %(signature)s, %(value)s) ON CONFLICT DO NOTHING 
+            SELECT %(module_name)s, %(index)s, %(name)s, %(visible)s, %(docstring)s, %(kind)s, %(signature)s, %(value)s
+                WHERE EXISTS(SELECT 1 FROM symbol WHERE name = %(name)s)
+            ON CONFLICT DO NOTHING 
             """,
             db_declarations,
         )

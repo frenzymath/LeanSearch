@@ -26,10 +26,21 @@ def create_schema(conn: Connection):
             'proofWanted'
         )
         """,
+        """CREATE TYPE symbol_kind AS ENUM (
+            'axiom',
+            'definition',
+            'theorem',
+            'opaque',
+            'quotient',
+            'inductive',
+            'constructor',
+            'recursor'
+        )""",
         """
         CREATE TABLE symbol (
             name JSONB PRIMARY KEY,
             module_name JSONB REFERENCES module(name) NOT NULL,
+            kind symbol_kind NOT NULL,
             type TEXT NOT NULL,
             is_prop BOOLEAN NOT NULL
         )
@@ -44,6 +55,8 @@ def create_schema(conn: Connection):
             kind declaration_kind NOT NULL,
             signature TEXT NOT NULL,
             value TEXT,
+            start INTEGER,
+            stop INTEGER,
             PRIMARY KEY (module_name, index)
         )
         """,
@@ -71,7 +84,7 @@ def create_schema(conn: Connection):
         """
         CREATE VIEW record AS
         SELECT
-            d.module_name, d.index, d.kind, d.name, d.signature, s.type, d.value, d.docstring,
+            d.module_name, d.index, d.kind, d.name, d.start, d.stop, d.signature, s.type, d.value, d.docstring,
             i.name AS informal_name, i.description AS informal_description
         FROM
             declaration d
