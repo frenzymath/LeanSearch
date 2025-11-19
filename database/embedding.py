@@ -1,12 +1,7 @@
 import logging
-import os
 
-import numpy as np
 import requests
-import torch
 from chromadb import Documents, Embeddings
-from torch import Tensor
-from transformers import AutoTokenizer, AutoModel
 
 logger = logging.getLogger(__name__)
 
@@ -14,16 +9,6 @@ logger = logging.getLogger(__name__)
 
 DIMENSION = 4096
 MAX_LENGTH = 4096
-
-
-def last_token_pool(last_hidden_states: Tensor, attention_mask: Tensor) -> Tensor:
-    left_padding = attention_mask[:, -1].sum() == attention_mask.shape[0]
-    if left_padding:
-        return last_hidden_states[:, -1]
-    else:
-        sequence_lengths = attention_mask.sum(dim=1) - 1
-        batch_size = last_hidden_states.shape[0]
-        return last_hidden_states[torch.arange(batch_size, device=last_hidden_states.device), sequence_lengths]
 
 
 class MistralEmbedding:
