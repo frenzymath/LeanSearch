@@ -37,12 +37,13 @@ importlib_metadata==8.6.1
 importlib_resources==6.5.2
 Jinja2==3.1.6
 jiter==0.9.0
-jixia==1.0.0a2
+jixia==1.0.4
 jsonschema==4.23.0
 jsonschema-specifications==2025.4.1
 kubernetes==32.0.1
 limits==5.1.0
 markdown-it-py==3.0.0
+markdown2==2.5.4
 MarkupSafe==3.0.2
 mdurl==0.1.2
 mmh3==5.1.0
@@ -70,6 +71,7 @@ posthog==4.0.1
 protobuf==5.29.4
 psycopg==3.2.7
 psycopg-binary==3.2.7
+psycopg-pool==3.2.6
 pyasn1==0.6.1
 pyasn1_modules==0.4.2
 pydantic==2.11.4
