@@ -12,8 +12,7 @@ logger = logging.getLogger(__name__)
 def create_vector_db(conn: Connection, path: str, batch_size: int):
     with open("prompt/embedding_instruction.txt") as fp:
         instruction = fp.read()
-    MistralEmbedding.setup_env()
-    embedding = MistralEmbedding(os.environ["EMBEDDING_DEVICE"], instruction)
+    embedding = MistralEmbedding(os.environ["EMBEDDING_URL"], instruction)
 
     client = chromadb.PersistentClient(path)
     collection = client.create_collection(

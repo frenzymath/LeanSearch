@@ -6,7 +6,7 @@ from jixia.structs import LeanName, DeclarationKind, parse_name
 from psycopg import Connection
 from psycopg.rows import class_row
 from psycopg.types.json import Jsonb
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from database.embedding import MistralEmbedding
 
@@ -15,12 +15,16 @@ class Record(BaseModel):
     module_name: LeanName
     kind: DeclarationKind
     name: LeanName
+    start: int
+    stop: int
     signature: str
     type: str
     value: str | None
     docstring: str | None
     informal_name: str
     informal_description: str
+
+    model_config = ConfigDict(extra="allow")
 
 
 class QueryResult(BaseModel):
@@ -35,7 +39,7 @@ class Retriever:
         self.collection = self.client.get_collection(name="leansearch", embedding_function=None)
         with open("prompt/retrieve_instruction.txt") as fp:
             instruction = fp.read()
-        self.embedding = MistralEmbedding(os.environ["EMBEDDING_DEVICE"], instruction)
+        self.embedding = MistralEmbedding(os.environ["EMBEDDING_URL"], instruction)
 
     def batch_fetch(self, name: Iterable[LeanName]) -> list[Record]:
         ret = []
