@@ -7,8 +7,10 @@ import dotenv
 import psycopg
 from fastapi import FastAPI, Body, Response, Cookie
 from jixia.structs import LeanName
+from psycopg import Connection
 from psycopg.rows import scalar_row
 from psycopg.types.json import Jsonb
+from psycopg_pool import ConnectionPool
 from pydantic import BaseModel
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -23,9 +25,14 @@ from retrieve import QueryResult, Retriever, Record
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     dotenv.load_dotenv()
-    with psycopg.connect(os.environ["CONNECTION_STRING"], autocommit=True) as conn:
+    with ConnectionPool(
+            os.environ["CONNECTION_STRING"],
+            kwargs={"autocommit": True},
+            check=ConnectionPool.check_connection,
+    ) as pool:
         app.augmentor = Augmentor(os.environ["OPENAI_MODEL"])
-        app.retriever = Retriever(os.environ["CHROMA_PATH"], conn)
+        app.retriever = Retriever(os.environ["CHROMA_PATH"], None)
+        app.pool = pool
         yield
 
 
@@ -36,10 +43,10 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 @app.middleware("http")
-async def check_connection(request: Request, call_next):
-    if app.retriever.conn.closed:
-        app.retriever.conn = psycopg.connect(os.environ["CONNECTION_STRING"], autocommit=True)
-    return await call_next(request)
+async def set_connection(request: Request, call_next):
+    with app.pool.connection() as conn:
+        app.retriever.conn = conn
+        return await call_next(request)
 
 
 app.add_middleware(SlowAPIMiddleware)
@@ -71,7 +78,8 @@ def search(
 
 
 @app.post("/fetch")
-def fetch(query: list[LeanName]) -> list[Record]:
+@limiter.limit("10/second")
+def fetch(request: Request, query: list[LeanName]) -> list[Record]:
     return app.retriever.batch_fetch(query)
 
 
