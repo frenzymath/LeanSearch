@@ -36,7 +36,7 @@ def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
 
     def load_symbol(module: LeanName):
         symbols = [s for s in project.load_info(module, Symbol) if not is_internal(s.name)]
-        values = ((Jsonb(s.name), Jsonb(module), s.kind, s.type, s.is_prop) for s in symbols)
+        values = ((Jsonb(s.name), Jsonb(module), s.kind, s.type_readable if s.type_readable is not None else s.type, s.is_prop) for s in symbols)
         cursor.executemany(
             """
             INSERT INTO symbol (name, module_name, kind, type, is_prop) VALUES (%s, %s, %s, %s, %s) ON CONFLICT DO NOTHING

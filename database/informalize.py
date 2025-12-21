@@ -103,7 +103,7 @@ def generate_informal(conn: Connection, batch_size: int = 50, limit_level: int |
 
                     ti = TranslationInput(
                         name=name,
-                        signature=signature,
+                        signature=signature if signature is not None else tp,
                         value=value,
                         docstring=docstring,
                         kind=kind,
