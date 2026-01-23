@@ -55,8 +55,7 @@ def create_schema(conn: Connection):
             kind declaration_kind NOT NULL,
             signature TEXT NOT NULL,
             value TEXT,
-            start INTEGER,
-            stop INTEGER,
+            range INT8RANGE,
             PRIMARY KEY (module_name, index)
         )
         """,
@@ -84,7 +83,7 @@ def create_schema(conn: Connection):
         """
         CREATE VIEW record AS
         SELECT
-            d.module_name, d.index, d.kind, d.name, d.start, d.stop, d.signature, s.type, d.value, d.docstring,
+            d.module_name, d.index, d.kind, d.name, d.range, d.signature, s.type, d.value, d.docstring,
             i.name AS informal_name, i.description AS informal_description
         FROM
             declaration d

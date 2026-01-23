@@ -4,9 +4,10 @@ from collections.abc import Iterable
 from pathlib import Path
 
 from jixia import LeanProject
-from jixia.structs import LeanName, Symbol, Declaration, is_internal
+from jixia.structs import LeanName, Symbol, Declaration, is_internal, StringRange
 from psycopg import Connection
 from psycopg.types.json import Jsonb
+from psycopg.types.range import Range
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,13 @@ def _get_signature(declaration: Declaration, module_content):
 def _get_value(declaration: Declaration, module_content):
     if declaration.value is not None and declaration.value.range is not None:
         return module_content[declaration.value.range.as_slice()].decode()
+    else:
+        return None
+
+def _get_range(declaration: Declaration):
+    r = declaration.ref.range
+    if r is not None:
+        return Range(r.start, r.stop)
     else:
         return None
 
@@ -108,8 +116,7 @@ def load_data(project: LeanProject, prefixes: list[LeanName], conn: Connection):
                 "kind"       : decl.kind,
                 "signature"  : _get_signature(decl, module_content),
                 "value"      : _get_value(decl, module_content),
-                "start"      : decl.ref.range.start if decl.ref.range is not None else None,
-                "stop"       : decl.ref.range.stop if decl.ref.range is not None else None,
+                "range"      : _get_range(decl),
             })
         cursor.executemany(
             """
